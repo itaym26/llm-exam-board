@@ -13,7 +13,7 @@ from google import genai
 from google.genai import types
 
 
-def make_gemini_client(model: str = "gemini-2.0-flash", max_output_tokens: int = 1024) -> Callable[[str], str]:
+def make_gemini_client(model: str = "gemini-2.5-flash", max_output_tokens: int = 1024) -> Callable[[str], str]:
     """Builds a pipeline-compatible LLM client backed by the Gemini API.
 
     Each call issues a single, standalone content-generation request with no
@@ -22,7 +22,11 @@ def make_gemini_client(model: str = "gemini-2.0-flash", max_output_tokens: int =
 
     Args:
         model: The Gemini model identifier to use. Defaults to
-            "gemini-2.0-flash", a fast model available on the free tier.
+            "gemini-2.5-flash". Earlier "gemini-2.0-*" models were found (see
+            runs/002-.../ISSUES.md) to return 429 RESOURCE_EXHAUSTED
+            immediately on a fresh free-tier key, and "gemini-1.5-flash" is
+            fully retired (404); "gemini-2.5-flash" is the model confirmed
+            to work on the free tier as of this writing.
         max_output_tokens: The maximum number of tokens to request in the
             response, bounding both latency and free-tier token usage.
 

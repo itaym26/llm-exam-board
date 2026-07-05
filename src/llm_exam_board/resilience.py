@@ -69,8 +69,20 @@ class ResilienceUtils:
             if parsed is not None:
                 return parsed
 
-            # Strategy 3: repair the common "trailing comma" mistake and retry.
-            repaired_candidate = cls.__TRAILING_COMMA_PATTERN.sub(r"\1", balanced_candidate)
+            # Strategy 3: escape raw control characters (newlines, carriage
+            # returns, tabs) embedded inside string literals. This is a very
+            # common mistake when an LLM embeds multi-line code or text as a
+            # JSON string value without escaping it, which otherwise makes
+            # the string literal itself invalid JSON.
+            control_char_escaped = cls.__escape_control_chars_in_strings(balanced_candidate)
+            parsed = cls.__try_parse(control_char_escaped)
+            if parsed is not None:
+                return parsed
+
+            # Strategy 4: repair the common "trailing comma" mistake on top
+            # of the control-character-escaped candidate, in case both
+            # mistakes occur in the same response.
+            repaired_candidate = cls.__TRAILING_COMMA_PATTERN.sub(r"\1", control_char_escaped)
             parsed = cls.__try_parse(repaired_candidate)
             if parsed is not None:
                 return parsed
@@ -154,6 +166,57 @@ class ResilienceUtils:
         # Reached end of text without the depth returning to zero: the
         # JSON structure is truncated or otherwise unbalanced.
         return None
+
+    @staticmethod
+    def __escape_control_chars_in_strings(text: str) -> str:
+        """Escapes raw newline/carriage-return/tab characters found inside string literals.
+
+        LLMs frequently embed multi-line code or text as a JSON string value
+        using a literal line break rather than the escaped `\\n` sequence
+        strict JSON requires, which otherwise makes `json.loads` reject an
+        otherwise well-structured response. Only characters found between
+        unescaped double quotes are rewritten; everything outside string
+        literals (including insignificant whitespace between tokens) is
+        left untouched.
+
+        Args:
+            text: A candidate JSON string, potentially containing raw
+                control characters inside its string literals.
+
+        Returns:
+            str: The text with control characters inside string literals
+            replaced by their escaped equivalents.
+        """
+        result_chars = []
+        in_string = False
+        escape_next = False
+
+        for char in text:
+            if escape_next:
+                # This character is already part of an escape sequence
+                # (e.g., the "n" in "\n"); pass it through untouched.
+                result_chars.append(char)
+                escape_next = False
+                continue
+            if char == "\\":
+                result_chars.append(char)
+                escape_next = True
+                continue
+            if char == '"':
+                in_string = not in_string
+                result_chars.append(char)
+                continue
+
+            if in_string and char == "\n":
+                result_chars.append("\\n")
+            elif in_string and char == "\r":
+                result_chars.append("\\r")
+            elif in_string and char == "\t":
+                result_chars.append("\\t")
+            else:
+                result_chars.append(char)
+
+        return "".join(result_chars)
 
     @staticmethod
     def __try_parse(candidate: str) -> Optional[Dict[str, Any]]:

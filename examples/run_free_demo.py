@@ -61,7 +61,7 @@ def main() -> None:
     student_responder = StudentResponder(make_groq_client(STUDENT_MODEL))
     judges = [
         JudgeEngine(make_groq_client("llama-3.3-70b-versatile"), "judge-groq-llama"),
-        JudgeEngine(make_gemini_client("gemini-2.0-flash"), "judge-gemini-flash"),
+        JudgeEngine(make_gemini_client("gemini-2.5-flash"), "judge-gemini-flash"),
     ]
     ensemble_manager = EnsembleManager()
 
