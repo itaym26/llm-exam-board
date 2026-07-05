@@ -39,8 +39,11 @@ def make_groq_client(model: str = "llama-3.3-70b-versatile", max_tokens: int = 1
         )
 
     # A single shared client instance reuses the underlying HTTP connection
-    # across calls; it holds no conversational state itself.
-    client = Groq()
+    # across calls; it holds no conversational state itself. An explicit
+    # timeout prevents a stalled connection from hanging the run forever,
+    # and max_retries bounds automatic retries on transient rate-limit
+    # (429) or server (5xx) errors instead of retrying indefinitely.
+    client = Groq(timeout=60.0, max_retries=3)
 
     def _client(prompt: str) -> str:
         response = client.chat.completions.create(
