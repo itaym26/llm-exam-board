@@ -1,0 +1,612 @@
+{
+  "summary": {
+    "total": 10,
+    "successful": 4,
+    "errors": 6,
+    "truth_gate_trigger_count": 6,
+    "average_consensus_score": 13.75
+  },
+  "results": [
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "question_index": 0,
+      "error": "3 consecutive attempts to generate a usable TestCase for topic 'Multithreading' all failed; last error: Audit Gate rejected TestCase aa88962d-07ac-47f9-b1a4-786ccfd025c2: critical rubric item 'Uses a condition variable for notification between threads' has a validation_pattern that does not match the golden reference."
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "06de975d-36f9-4b7a-82ab-55efb8491b1a",
+        "prompt": "Create a class that simulates a bank account with multiple threads accessing it. The class should have a method to deposit and withdraw money, and it should handle race conditions. The class should also have a method to get the current balance.",
+        "golden_reference": "class BankAccount:\n    def __init__(self, initial_balance=0):\n        self.balance = initial_balance\n        self.lock = threading.Lock()\n    def deposit(self, amount):\n        with self.lock:\n            self.balance += amount\n    def withdraw(self, amount):\n        with self.lock:\n            if self.balance >= amount:\n                self.balance -= amount\n            else:\n                raise ValueError(\"Insufficient balance\")\n    def get_balance(self):\n        with self.lock:\n            return self.balance",
+        "rubric": [
+          {
+            "item_id": "86bb330d-fe2b-4d79-a3f0-1fe9db1370e1",
+            "description": "The class has a lock to handle race conditions",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "threading\\.Lock\\("
+          },
+          {
+            "item_id": "df86901b-c83c-43e3-9751-863a3a963776",
+            "description": "The deposit method is thread-safe",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "def \\w+\\(self, \\w+\\):\\s*with self\\.\\w+:"
+          },
+          {
+            "item_id": "63e42ecb-f8c8-4b28-944e-532d26be3b8b",
+            "description": "The withdraw method is thread-safe",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "def \\w+\\(self, \\w+\\):\\s*with self\\.\\w+:"
+          },
+          {
+            "item_id": "a8dabc20-0b10-487c-b446-e76ec9d56bf0",
+            "description": "The get_balance method is thread-safe",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "def \\w+\\(self\\):\\s*with self\\.\\w+:"
+          },
+          {
+            "item_id": "9a91da25-1e86-4616-9634-292ed56509e6",
+            "description": "The class handles insufficient balance correctly",
+            "max_points": 20.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "840f1b96-2626-4a27-922d-32e3c5bd838c",
+        "answer_text": "**BankAccount Class with Thread Safety**\n=====================================\n\nBelow is an implementation of a bank account class with multiple threads accessing it, ensuring thread safety and handling potential race conditions.\n\n```python\nimport threading\n\nclass BankAccount:\n    def __init__(self, initial_balance):\n        \"\"\"\n        Initializes a BankAccount instance with the given initial balance.\n        \n        Args:\n            initial_balance (float): The initial balance in the account.\n        \"\"\"\n        self.balance = initial_balance\n        self.lock = threading.Lock()\n\n    def deposit(self, amount):\n        \"\"\"\n        Deposits the given amount into the account.\n        \n        Args:\n            amount (float): The amount to be deposited.\n        \n        Raises:\n            ValueError: If the deposit amount is less than or equal to 0.\n        \"\"\"\n        if amount <= 0:\n            raise ValueError(\"Deposit amount must be greater than 0\")\n        \n        with self.lock:  # Acquire the lock to prevent concurrent access\n            self.balance += amount\n\n    def withdraw(self, amount):\n        \"\"\"\n        Withdraws the given amount from the account.\n        \n        Args:\n            amount (float): The amount to be withdrawn.\n        \n        Raises:\n            ValueError: If the withdrawal amount is less than or equal to 0 or exceeds the account balance.\n        \"\"\"\n        if amount <= 0:\n            raise ValueError(\"Withdrawal amount must be greater than 0\")\n        if amount > self.balance:\n            raise ValueError(\"Insufficient funds for withdrawal\")\n        \n        with self.lock:  # Acquire the lock to prevent concurrent access\n            self.balance -= amount\n\n    def get_balance(self):\n        \"\"\"\n        Returns the current account balance.\n        \n        Returns:\n            float: The current account balance.\n        \"\"\"\n        with self.lock:  # Acquire the lock to ensure accurate balance reading\n            return self.balance\n```\n\n**Example Usage**\n-----------------\n\n```python\n# Create a BankAccount instance with an initial balance of $1000\naccount = BankAccount(1000)\n\n# Deposit $500 into the account\naccount.deposit(500)\nprint(f\"Balance after deposit: {account.get_balance()}\")  # Output: Balance after deposit: 1500.0\n\n# Withdraw $200 from the account\naccount.withdraw(200)\nprint(f\"Balance after withdrawal: {account.get_balance()}\")  # Output: Balance after withdrawal: 1300.0\n```\n\nThis implementation uses a lock (`threading.Lock()`) to ensure thread safety and prevent race conditions. The `deposit()`, `withdraw()`, and `get_balance()` methods acquire the lock before performing their operations to prevent concurrent access. The example usage demonstrates how to use the BankAccount class with multiple threads accessing the account."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 80.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The submission is mostly correct, but it does not handle insufficient balance correctly in the withdraw method as the check is done outside of the lock.",
+          "deductions": [
+            {
+              "rubric_item_id": "9a91da25-1e86-4616-9634-292ed56509e6",
+              "points_deducted": 20.0,
+              "justification": "The class does not correctly handle insufficient balance as per the reference solution. It checks for sufficient balance outside of the lock in the withdraw method and raises an error.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "df86901b-c83c-43e3-9751-863a3a963776",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The deposit method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "63e42ecb-f8c8-4b28-944e-532d26be3b8b",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The withdraw method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "a8dabc20-0b10-487c-b446-e76ec9d56bf0",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The get_balance method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 100.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The student's solution is excellent, correctly implementing a thread-safe `BankAccount` class using `threading.Lock()` to prevent race conditions. All methods (`deposit`, `withdraw`, `get_balance`) are properly protected, and the `withdraw` method correctly handles insufficient funds. The additional input validation for positive amounts is a good practice.",
+          "deductions": [
+            {
+              "rubric_item_id": "df86901b-c83c-43e3-9751-863a3a963776",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The deposit method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "63e42ecb-f8c8-4b28-944e-532d26be3b8b",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The withdraw method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "a8dabc20-0b10-487c-b446-e76ec9d56bf0",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The get_balance method is thread-safe' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "question_index": 2,
+      "error": "3 consecutive attempts to generate a usable TestCase for topic 'Multithreading' all failed; last error: Audit Gate rejected TestCase 71cfb849-7932-4a3b-a336-fd620e379144: critical rubric item 'The code defines a class with a mutex lock to synchronize access to the account balance.' has a validation_pattern that does not match the golden reference."
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "a2ce921e-709a-4a3f-bbb3-03be2e48a45c",
+        "prompt": "Create a multithreaded program using Python that implements a producer-consumer model. The program should have two threads: a producer thread that generates numbers from 1 to 10 and puts them into a queue, and a consumer thread that takes numbers from the queue and prints them. Use a lock to protect access to the queue. Define a class named \"ProducerConsumer\" with a method named \"run\" that starts the producer and consumer threads. In the \"run\" method, use a loop to generate numbers from 1 to 10 and put them into the queue.",
+        "golden_reference": "import threading\nfrom queue import Queue\n\nclass ProducerConsumer:\n    def __init__(self):\n        self.queue = Queue()\n        self.lock = threading.Lock()\n\n    def producer(self):\n        for i in range(1, 11):\n            with self.lock:\n                self.queue.put(i)\n            print(f\"Produced {i}\")\n\n    def consumer(self):\n        for _ in range(10):\n            with self.lock:\n                item = self.queue.get()\n            print(f\"Consumed {item}\")\n\n    def run(self):\n        producer_thread = threading.Thread(target=self.producer)\n        consumer_thread = threading.Thread(target=self.consumer)\n        producer_thread.start()\n        consumer_thread.start()\n        producer_thread.join()\n        consumer_thread.join()\n",
+        "rubric": [
+          {
+            "item_id": "3b1de86f-856d-4cbe-bb4c-6ffb4ee3e51e",
+            "description": "The program uses a queue to store produced items",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "from\\s+queue\\s+import\\s+Queue"
+          },
+          {
+            "item_id": "0c830361-500a-47bf-a33b-4cee57bb3109",
+            "description": "The program uses a lock to protect access to the queue",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "threading\\.Lock\\("
+          },
+          {
+            "item_id": "ff3b0271-22e6-434a-bd55-efa465ef0946",
+            "description": "The producer thread generates numbers from 1 to 10 and puts them into the queue",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "for\\s+\\w+\\s+in\\s+range\\(1,\\s+11\\)"
+          },
+          {
+            "item_id": "ea1b881d-36a6-4060-80d9-435113371442",
+            "description": "The consumer thread takes numbers from the queue and prints them",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "while\\s+True:|for\\s+\\w+\\s+in\\s+range\\(10\\)"
+          },
+          {
+            "item_id": "0cfb245f-d44d-4dec-89f3-1f88a2060196",
+            "description": "The program starts the producer and consumer threads and waits for them to finish",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "threading\\.Thread\\(target=\\w+\\)|\\.start\\(|\\.join\\("
+          },
+          {
+            "item_id": "5352cbdb-3b76-4bc4-9e29-5d73f021b816",
+            "description": "The program uses a class named \"ProducerConsumer\" with a method named \"run\" that starts the producer and consumer threads",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "class\\s+ProducerConsumer:|def\\s+run\\(self\\):"
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "68f6cf94-67f0-496b-87e1-88c77ff6ec06",
+        "answer_text": "**Producer-Consumer Program**\n==========================\n\nBelow is the Python code implementing the multithreaded producer-consumer model:\n\n```python\nimport threading\nfrom queue import Queue\nimport time\n\nclass ProducerConsumer:\n    def __init__(self):\n        self.queue = Queue()\n        self.lock = threading.Lock()\n\n    def producer_thread(self, name):\n        \"\"\"\n        Producer thread function.\n\n        Generates numbers from 1 to 10 and puts them into the queue.\n        \"\"\"\n        for i in range(1, 11):\n            with self.lock:\n                self.queue.put(i)\n                print(f\"{name} produced: {i}\")\n\n    def consumer_thread(self, name):\n        \"\"\"\n        Consumer thread function.\n\n        Takes numbers from the queue and prints them.\n        \"\"\"\n        while not self.queue.empty():\n            with self.lock:\n                num = self.queue.get()\n            print(f\"{name} consumed: {num}\")\n\n    def run(self):\n        \"\"\"\n        Starts the producer and consumer threads.\n\n        Generates numbers from 1 to 10 and puts them into the queue.\n        \"\"\"\n        producer = threading.Thread(target=self.producer_thread, args=(\"Producer\",))\n        consumer = threading.Thread(target=self.consumer_thread, args=(\"Consumer\",))\n\n        producer.start()\n        consumer.start()\n\n        producer.join()\n        consumer.join()\n\n        print(\"Producer and Consumer threads finished.\")\n\n# Usage\nif __name__ == \"__main__\":\n    pc = ProducerConsumer()\n    pc.run()\n```\n\n**Explanation:**\n\n*   The `ProducerConsumer` class has a `queue` and a `lock` attribute to protect access to the queue.\n*   The `producer_thread` and `consumer_thread` methods define the producer and consumer behavior respectively.\n*   The `run` method starts the producer and consumer threads.\n*   Within the `run` method, the producer thread generates numbers from 1 to 10 and puts them into the queue.\n*   The consumer thread takes numbers from the queue and prints them.\n*   The program uses a simple `while` loop to wait for the queue to be empty before exiting the consumer thread.\n\n**Output:**\n\nYou will see the producer and consumer threads printing the numbers from 1 to 10, with the producer thread producing the numbers and the consumer thread consuming them.\n\n```\nProducer produced: 1\nConsumer consumed: 1\nProducer produced: 2\nConsumer consumed: 2\nProducer produced: 3\nConsumer consumed: 3\nProducer produced: 4\nConsumer consumed: 4\nProducer produced: 5\nConsumer consumed: 5\nProducer produced: 6\nConsumer consumed: 6\nProducer produced: 7\nConsumer consumed: 7\nProducer produced: 8\nConsumer consumed: 8\nProducer produced: 9\nConsumer consumed: 9\nProducer produced: 10\nConsumer consumed: 10\nProducer and Consumer threads finished.\n```\n\nNote: Due to the multithreaded nature of this program, the output might not be perfectly synchronized, and the order of consumption might not strictly follow the order of production. However, this demonstrates the basic producer-consumer model using Python's threading module and a queue."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 100.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The student's answer accurately implements a multithreaded producer-consumer model in Python, meeting all requirements outlined in the rubric. The code is well-structured, readable, and properly synchronized. The explanation provided helps clarify the program's functionality.",
+          "deductions": [
+            {
+              "rubric_item_id": "0cfb245f-d44d-4dec-89f3-1f88a2060196",
+              "points_deducted": 0.0,
+              "justification": "The program does start the producer and consumer threads and waits for them to finish, but the explanation could be clearer about how this is implemented.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "ea1b881d-36a6-4060-80d9-435113371442",
+              "points_deducted": 0.0,
+              "justification": "The consumer thread does take numbers from the queue and print them, with proper synchronization.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "ff3b0271-22e6-434a-bd55-efa465ef0946",
+              "points_deducted": 0.0,
+              "justification": "The producer thread generates numbers from 1 to 10 and puts them into the queue as required.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "0c830361-500a-47bf-a33b-4cee57bb3109",
+              "points_deducted": 0.0,
+              "justification": "A lock is used to protect access to the queue, ensuring thread safety.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "3b1de86f-856d-4cbe-bb4c-6ffb4ee3e51e",
+              "points_deducted": 0.0,
+              "justification": "The program correctly uses a queue to store produced items.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "5352cbdb-3b76-4bc4-9e29-5d73f021b816",
+              "points_deducted": 0.0,
+              "justification": "The program uses a class named 'ProducerConsumer' with a method named 'run' that starts the producer and consumer threads.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "ea1b881d-36a6-4060-80d9-435113371442",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The consumer thread takes numbers from the queue and prints them' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 80.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The student's code correctly implements most aspects of the producer-consumer model, including using a queue, lock, and separate threads within the specified class structure. However, the consumer thread's logic for consuming items is flawed; it relies on `while not self.queue.empty()`, which is not robust for ensuring all items are consumed in a multithreaded environment. A better approach would be to iterate a fixed number of times or use a signaling mechanism.",
+          "deductions": [
+            {
+              "rubric_item_id": "ea1b881d-36a6-4060-80d9-435113371442",
+              "points_deducted": 20.0,
+              "justification": "The consumer thread's `while not self.queue.empty():` loop is problematic. It doesn't guarantee that all 10 items will be consumed, especially if the producer is slower than the consumer. The consumer should ideally consume a fixed number of items (in this case, 10), perhaps by waiting for items to be available or by being explicitly signaled to stop, or by simply iterating 10 times as in the golden solution. The current implementation might exit prematurely if the queue is temporarily empty. The golden solution consumes exactly 10 items by iterating 10 times.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "ea1b881d-36a6-4060-80d9-435113371442",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The consumer thread takes numbers from the queue and prints them' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "6ee6c42e-cbde-46a6-b794-585177af11fd",
+        "prompt": "Implement a multithreaded banking system in Python with two threads representing two bank accounts. Both threads should be able to withdraw and deposit money from their respective accounts, but you must avoid deadlocks by using a proper locking mechanism. Define a method named exactly \"transfer_funds\" to transfer money between the two accounts. Your code should handle the case where one account has insufficient funds for a transfer.",
+        "golden_reference": "class BankAccount:\n    def __init__(self, balance=0):\n        self.balance = balance\n        self.lock = threading.Lock()\n\n    def deposit(self, amount):\n        with self.lock:\n            self.balance += amount\n\n    def withdraw(self, amount):\n        with self.lock:\n            if self.balance >= amount:\n                self.balance -= amount\n                return True\n            return False\n\nclass Bank:\n    def __init__(self, account1, account2):\n        self.account1 = account1\n        self.account2 = account2\n        self.lock1 = threading.Lock()\n        self.lock2 = threading.Lock()\n\n    def transfer_funds(self, from_account, to_account, amount):\n        if from_account == self.account1:\n            first_lock = self.lock1\n            second_lock = self.lock2\n        else:\n            first_lock = self.lock2\n            second_lock = self.lock1\n        with first_lock:\n            with second_lock:\n                if from_account.balance >= amount:\n                    from_account.balance -= amount\n                    to_account.balance += amount\n                    return True\n        return False\n\naccount1 = BankAccount(100)\naccount2 = BankAccount(100)\nbank = Bank(account1, account2)\n",
+        "rubric": [
+          {
+            "item_id": "b559348b-5363-4a62-974d-68adaaf49bfb",
+            "description": "Proper use of threading locks to avoid deadlocks",
+            "max_points": 30.0,
+            "is_critical": true,
+            "validation_pattern": "threading\\.Lock\\("
+          },
+          {
+            "item_id": "bdff6b63-551f-4792-8dc6-a90ff4b5618c",
+            "description": "Implementation of the transfer_funds method",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "def transfer_funds\\("
+          },
+          {
+            "item_id": "9050b0a9-68b4-4707-9ccb-b6f48385a936",
+            "description": "Handling of insufficient funds during transfer",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "if [\\w]+\\.balance >= [\\w]+"
+          },
+          {
+            "item_id": "f49f665b-1339-49d0-a53e-e943af1de1c5",
+            "description": "Correct usage of locks for deposit and withdrawal operations",
+            "max_points": 30.0,
+            "is_critical": true,
+            "validation_pattern": "with [\\w]+\\.lock:"
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "856eb8cb-0b8c-4e3f-9cf9-c62a252819f6",
+        "answer_text": "Here's an implementation of a multithreaded banking system in Python:\n\n```python\nimport threading\nimport random\n\nclass BankAccount:\n    def __init__(self, name, balance):\n        self.name = name\n        self.balance = balance\n        self.lock = threading.Lock()\n\n    def deposit(self, amount):\n        print(f\"{self.name} deposited ${amount}.\")\n        with self.lock:\n            self.balance += amount\n\n    def withdraw(self, amount):\n        print(f\"{self.name} withdrew ${amount}.\")\n        with self.lock:\n            if self.balance >= amount:\n                self.balance -= amount\n            else:\n                raise ValueError(f\"{self.name} has insufficient funds.\")\n\n    def transfer_funds(self, amount, other_account):\n        with self.lock:\n            if self.balance >= amount:\n                self.withdraw(amount)\n                other_account.deposit(amount)\n                print(f\"${amount} transferred from {self.name} to {other_account.name}.\")\n            else:\n                raise ValueError(f\"{self.name} has insufficient funds for transfer.\")\n\nclass ThreadedBank:\n    def __init__(self):\n        self.account1 = BankAccount(\"Account 1\", 1000)\n        self.account2 = BankAccount(\"Account 2\", 500)\n        self.stop_event = threading.Event()\n\n    def run_account1(self):\n        while not self.stop_event.is_set():\n            action = random.choice([\"deposit\", \"withdraw\"])\n            amount = random.randint(10, 100)\n\n            if action == \"deposit\":\n                self.account1.deposit(amount)\n            else:\n                try:\n                    self.account1.withdraw(amount)\n                except ValueError as e:\n                    print(e)\n\n            if not self.stop_event.is_set():\n                threading.Timer(1, self.run_account1).start()\n\n    def run_account2(self):\n        while not self.stop_event.is_set():\n            action = random.choice([\"deposit\", \"withdraw\"])\n            amount = random.randint(10, 100)\n\n            if action == \"deposit\":\n                self.account2.deposit(amount)\n            else:\n                try:\n                    self.account2.withdraw(amount)\n                except ValueError as e:\n                    print(e)\n\n            if not self.stop_event.is_set():\n                threading.Timer(1, self.run_account2).start()\n\n    def transfer_funds(self, amount):\n        self.account1.transfer_funds(amount, self.account2)\n        self.account2.transfer_funds(amount, self.account1)\n\nif __name__ == \"__main__\":\n    bank = ThreadedBank()\n    account1_thread = threading.Thread(target=bank.run_account1)\n    account2_thread = threading.Thread(target=bank.run_account2)\n\n    account1_thread.start()\n    account2_thread.start()\n\n    try:\n        bank.transfer_funds(100)\n        # Wait for 5 seconds to see some transactions happening before stopping the threads.\n        time.sleep(5)\n        bank.stop_event.set()\n        account1_thread.join()\n        account2_thread.join()\n    except KeyboardInterrupt:\n        bank.stop_event.set()\n        account1_thread.join()\n        account2_thread.join()\n\n    print(\"Final balances:\")\n    print(f\"Account 1: {bank.account1.balance}\")\n    print(f\"Account 2: {bank.account2.balance}\")\n```\n\nThis code implements a multithreaded banking system with two threads representing two bank accounts. The `BankAccount` class represents a single bank account with methods for depositing and withdrawing money, as well as transferring funds to another account. The `ThreadedBank` class manages the two accounts and implements a method for transferring funds between them. The accounts operate concurrently, simulating real-time transactions.\n\nTo avoid deadlocks, the code uses a proper locking mechanism, where each account has its own lock, which is always acquired before accessing the account's balance. This ensures that only one thread can access an account's balance at a time, preventing deadlocks.\n\nWhen transferring funds, the code first tries to withdraw the amount from the sender's account, then deposits the amount into the recipient's account. If the sender's account has insufficient funds, a `ValueError` is raised.\n\nThe code also handles the case where one account has insufficient funds for a transfer. In this case, a `ValueError` is raised with a clear message indicating the problem.\n\nFinally, the code includes a `main` function to demonstrate how to use the multithreaded banking system. The function creates two threads to simulate concurrent transactions between the two accounts, waits for 5 seconds to see some transactions happen, then stops the threads and prints the final balances of both accounts."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 40.0,
+          "final_score": 40.0,
+          "truth_gate_triggered": false,
+          "feedback_summary": "The student's solution does not fully align with the problem requirements, particularly regarding the transfer_funds method and locking mechanism. Improvements are needed to ensure consistency with the specified rubric items.",
+          "deductions": [
+            {
+              "rubric_item_id": "9050b0a9-68b4-4707-9ccb-b6f48385a936",
+              "points_deducted": 20.0,
+              "justification": "The student's implementation of the transfer_funds method in the BankAccount class does not match the exact signature specified in the problem, and instead takes an amount and another account as parameters. This deviates from the original requirement.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "bdff6b63-551f-4792-8dc6-a90ff4b5618c",
+              "points_deducted": 20.0,
+              "justification": "The student's implementation of the transfer_funds method is not in the Bank class, but in the BankAccount class. The method is also called differently in the ThreadedBank class, which does not correctly implement the required functionality.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "b559348b-5363-4a62-974d-68adaaf49bfb",
+              "points_deducted": 10.0,
+              "justification": "The student's solution does not utilize a locking mechanism to properly prevent deadlocks when performing the transfer operation between two accounts, although it does use locks for individual account operations.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "f49f665b-1339-49d0-a53e-e943af1de1c5",
+              "points_deducted": 10.0,
+              "justification": "While the student does use locks for deposit and withdrawal operations, the transfer_funds operation does not utilize locks in a manner consistent with the problem's requirements for the Bank class.",
+              "is_truth_gate_override": false
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 70.0,
+          "final_score": 70.0,
+          "truth_gate_triggered": false,
+          "feedback_summary": "The student correctly implemented locks for single-account operations (deposit/withdraw) and handled insufficient funds for transfers. However, the `transfer_funds` method, as implemented, is susceptible to deadlocks because it acquires locks in an inconsistent order, which is a critical flaw for a multithreaded banking system. The overall structure and threading demonstration are well-executed, but the core requirement of avoiding deadlocks in transfers was not met.",
+          "deductions": [
+            {
+              "rubric_item_id": "b559348b-5363-4a62-974d-68adaaf49bfb",
+              "points_deducted": 30.0,
+              "justification": "The student's `transfer_funds` method within the `BankAccount` class attempts to acquire its own lock and then calls `withdraw` and `deposit` methods, which also acquire locks. This creates a nested locking scenario where a thread might acquire the lock of `from_account` and then try to acquire the lock of `to_account` by calling `to_account.deposit()`. If another thread tries to transfer money in the opposite direction (from `to_account` to `from_account`) at the same time, it could acquire the `to_account` lock and then attempt to acquire the `from_account` lock via `from_account.deposit()`. This leads to a classic deadlock situation. The golden solution uses a consistent lock ordering for transfers between two specific accounts (e.g., always lock account1 then account2) to prevent this, or it could acquire both locks simultaneously (e.g., using `threading.Lock().acquire()` with a timeout or `contextlib.ExitStack` for multiple locks), which is a common strategy to avoid deadlocks in multi-resource locking.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "bdff6b63-551f-4792-8dc6-a90ff4b5618c",
+              "points_deducted": 0.0,
+              "justification": "The `transfer_funds` method is defined and attempts to transfer money, but it has a deadlock vulnerability.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "9050b0a9-68b4-4707-9ccb-b6f48385a936",
+              "points_deducted": 0.0,
+              "justification": "The `transfer_funds` method correctly checks for `self.balance >= amount` before proceeding with the transfer and raises a `ValueError` for insufficient funds.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "f49f665b-1339-49d0-a53e-e943af1de1c5",
+              "points_deducted": 0.0,
+              "justification": "The `deposit` and `withdraw` operations correctly use their respective account's lock to protect the balance, ensuring thread safety for single-account operations.",
+              "is_truth_gate_override": false
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 55.0,
+        "score_std_dev": 15.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "test_case": {
+        "test_case_id": "617f8e78-c57f-4d02-b72c-8bc5da592213",
+        "prompt": "You are tasked with designing a `Counter` class in Python that is safe for use across multiple threads. This class should have a `value` attribute, initialized to 0, and two methods: `increment()` and `get_value()`. The `increment()` method should atomically increase the `value` by 1. The `get_value()` method should return the current `value`. Your solution must prevent race conditions when `increment()` is called concurrently from multiple threads. Provide the complete `Counter` class implementation.",
+        "golden_reference": "import threading\n\nclass Counter:\n    def __init__(self):\n        self.value = 0\n        self._lock = threading.Lock()\n\n    def increment(self):\n        with self._lock:\n            self.value += 1\n\n    def get_value(self):\n        # For simple read of an integer, a lock might not be strictly necessary\n        # on some platforms/interpreters if it's guaranteed to be atomic.\n        # However, for robustness and to illustrate thread-safety principles,\n        # especially if value were a more complex object, locking for reads is good practice.\n        # For this specific problem where value is an int, it's often considered atomic enough in Python.\n        # But if the increment method requires a lock, for consistency and clarity,\n        # or if future extensions might make value non-atomic, it's safer to lock.\n        # For this exercise, we'll demonstrate a simple read that *could* be locked.\n        # We will not require a lock for get_value in the rubric as int reads are often atomic.\n        return self.value",
+        "rubric": [
+          {
+            "item_id": "6a1d500d-4243-4cca-92a9-dfffa91c397a",
+            "description": "Correct class definition for `Counter`.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "class\\s+Counter:"
+          },
+          {
+            "item_id": "a292c904-48fb-4ec5-9961-76725fb34578",
+            "description": "Initializes `value` attribute to 0.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.value\\s*=\\s*0"
+          },
+          {
+            "item_id": "f8f71178-637b-4cac-b8c9-0a3f1df35228",
+            "description": "Initializes a `threading.Lock` object within the `Counter` class.",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "threading\\.Lock\\(\\)"
+          },
+          {
+            "item_id": "c2fb24e5-dcaf-4998-a092-69bf5460bf48",
+            "description": "Defines an `increment` method.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "def\\s+increment\\(self\\):"
+          },
+          {
+            "item_id": "4abaf23b-1e62-4757-b5d5-f5bde5012a88",
+            "description": "Uses the initialized lock to protect the `value` increment operation (e.g., using a `with` statement for the lock).",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "with\\s+self\\.\\w+\\s*:\\s*\\n\\s*self\\.value\\s*\\+\\=\\s*1"
+          },
+          {
+            "item_id": "0bae21c7-e5ab-4f21-9cdc-e806c246719b",
+            "description": "Correctly increments `self.value` by 1.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.value\\s*\\+\\=\\s*1"
+          },
+          {
+            "item_id": "30ab826b-8b75-4d4b-a658-e06a86c3e7fc",
+            "description": "Defines a `get_value` method.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "def\\s+get_value\\(self\\):"
+          },
+          {
+            "item_id": "71c9b81a-13d9-4c4e-8d47-d51d3aed1dbb",
+            "description": "Returns the current `self.value` from `get_value`.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "return\\s+self\\.value"
+          },
+          {
+            "item_id": "3f69c1fe-0ceb-43f3-a69d-9eaa4874b7cf",
+            "description": "Imports the `threading` module.",
+            "max_points": 5.0,
+            "is_critical": true,
+            "validation_pattern": "import\\s+threading"
+          },
+          {
+            "item_id": "85a70659-ea59-48d2-9a3c-474887103a73",
+            "description": "Overall code structure, readability, and adherence to Pythonic conventions.",
+            "max_points": 10.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "3a6a6d64-f3b2-44d9-919d-c296fd7da447",
+        "answer_text": "```python\nimport threading\n\nclass Counter:\n    def __init__(self):\n        # Use a lock to ensure thread-safety\n        self._lock = threading.Lock()\n        # Initialize the counter value to 0\n        self._value = 0\n\n    @property\n    def value(self):\n        \"\"\"Return the current counter value.\"\"\"\n        return self._value\n\n    def increment(self):\n        \"\"\"Atomically increase the counter value by 1.\"\"\"\n        # Acquire the lock before modifying the value\n        with self._lock:\n            # Once the lock is acquired, increment the value and release the lock\n            self._value += 1\n\n# Example usage:\ncounter = Counter()\n\ndef increment_counter(counter, num_iterations):\n    \"\"\"Increment the counter a specified number of times.\"\"\"\n    for _ in range(num_iterations):\n        counter.increment()\n\n# Create and start two threads that increment the counter 1,000,000 times\nnum_iterations = 1000000\nthreads = []\nfor _ in range(2):\n    thread = threading.Thread(target=increment_counter, args=(counter, num_iterations))\n    thread.start()\n    threads.append(thread)\n\n# Wait for both threads to finish\nfor thread in threads:\n    thread.join()\n\n# Verify the final counter value\nassert counter.value == num_iterations * 2\n```\n\nThis `Counter` class uses a `threading.Lock` object to prevent race conditions when `increment()` is called concurrently from multiple threads. The `increment()` method acquires the lock before modifying the `value` attribute, ensuring that only one thread can modify the value at a time. The `get_value()` method is not needed as the `value` attribute is directly accessible, and it's read-only due to its `property` decorator."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 60.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The submitted Counter class is generally well-structured and thread-safe, but it lacks a get_value method as specified and includes unnecessary example usage and threading code.",
+          "deductions": [
+            {
+              "rubric_item_id": "30ab826b-8b75-4d4b-a658-e06a86c3e7fc",
+              "points_deducted": 5.0,
+              "justification": "The Counter class is missing a get_value method as specified in the task description. Although the value attribute is accessible via a property decorator, the task explicitly requires a get_value method.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "71c9b81a-13d9-4c4e-8d47-d51d3aed1dbb",
+              "points_deducted": 5.0,
+              "justification": "The Counter class does not define a get_value method that returns the current self.value as required.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "85a70659-ea59-48d2-9a3c-474887103a73",
+              "points_deducted": 5.0,
+              "justification": "The addition of example usage and threads complicates the code and does not adhere to the simplicity and structure specified in the task.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "a292c904-48fb-4ec5-9961-76725fb34578",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Initializes `value` attribute to 0.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "4abaf23b-1e62-4757-b5d5-f5bde5012a88",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'Uses the initialized lock to protect the `value` increment operation (e.g., using a `with` statement for the lock).' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "0bae21c7-e5ab-4f21-9cdc-e806c246719b",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Correctly increments `self.value` by 1.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "30ab826b-8b75-4d4b-a658-e06a86c3e7fc",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Defines a `get_value` method.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "71c9b81a-13d9-4c4e-8d47-d51d3aed1dbb",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Returns the current `self.value` from `get_value`.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 65.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The student's `Counter` class correctly implements thread-safe incrementation using a `threading.Lock`. The use of a `_value` attribute exposed via a `@property` named `value` is a valid Pythonic approach for read access and effectively achieves the spirit of the 'get_value' requirement, even though it deviates from the exact method signature requested. The initial value and the increment logic are correct. The overall structure and additional example usage are excellent.",
+          "deductions": [
+            {
+              "rubric_item_id": "a292c904-48fb-4ec5-9961-76725fb34578",
+              "points_deducted": 0.0,
+              "justification": "The student initializes `_value` to 0. Although the prompt specified `value` and the student used `_value`, it is then exposed via a property named `value`, which effectively meets the requirement.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "71c9b81a-13d9-4c4e-8d47-d51d3aed1dbb",
+              "points_deducted": 5.0,
+              "justification": "The student implemented a `value` property instead of a `get_value` method. While the property provides read access, it doesn't align with the method signature explicitly requested in the prompt ('`get_value()` method should return the current `value`').",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "30ab826b-8b75-4d4b-a658-e06a86c3e7fc",
+              "points_deducted": 5.0,
+              "justification": "The student did not define a `get_value` method as explicitly requested. Instead, they used a `@property` decorator for `value`.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "a292c904-48fb-4ec5-9961-76725fb34578",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Initializes `value` attribute to 0.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "4abaf23b-1e62-4757-b5d5-f5bde5012a88",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'Uses the initialized lock to protect the `value` increment operation (e.g., using a `with` statement for the lock).' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "0bae21c7-e5ab-4f21-9cdc-e806c246719b",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Correctly increments `self.value` by 1.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "30ab826b-8b75-4d4b-a658-e06a86c3e7fc",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Defines a `get_value` method.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "71c9b81a-13d9-4c4e-8d47-d51d3aed1dbb",
+              "points_deducted": 5.0,
+              "justification": "Truth Gate: critical pattern for 'Returns the current `self.value` from `get_value`.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 1,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 50.122509378s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.5-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '50s'}]}}"
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 2,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 45.636521219s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.5-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '45s'}]}}"
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 3,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 40.88448019s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-2.5-flash', 'location': 'global'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '40s'}]}}"
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 4,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.747002849s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-2.5-flash', 'location': 'global'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '36s'}]}}"
+    }
+  ]
+}
