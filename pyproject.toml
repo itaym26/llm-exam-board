@@ -11,9 +11,13 @@ requires-python = ">=3.9"
 license = { text = "MIT" }
 
 [project.optional-dependencies]
-# Only needed to run examples/anthropic_client.py and examples/run_real_demo.py;
-# the library itself has no third-party dependencies.
-examples = ["anthropic>=0.116"]
+# Only needed to run the scripts under examples/; the library itself has
+# no third-party dependencies.
+examples = [
+    "anthropic>=0.116",  # examples/anthropic_client.py, run_real_demo.py
+    "google-genai>=1.0",  # examples/gemini_client.py, run_free_demo.py
+    "groq>=1.0",  # examples/groq_client.py, run_free_demo.py
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
