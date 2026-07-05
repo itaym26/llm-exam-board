@@ -1,0 +1,125 @@
+{
+  "test_case": {
+    "test_case_id": "353b4f86-05a6-4732-bcdf-f5e841f4c68b",
+    "topic": "Multithreading",
+    "difficulty": "medium",
+    "prompt": "Create a class named 'Counter' that uses a mutex lock to safely increment a shared counter variable across multiple threads. The class should have a 'counter' attribute initialized to 0, an 'increment' method that increments the counter, and a 'get_value' method that returns the current value of the counter. Implement the class in Python, ensuring thread safety.",
+    "golden_reference": "\nclass Counter:\n    def __init__(self):\n        self.counter = 0\n        self.mutex = threading.Lock()\n\n    def increment(self):\n        with self.mutex:\n            self.counter += 1\n\n    def get_value(self):\n        with self.mutex:\n            return self.counter\n",
+    "is_audited": true,
+    "rubric": [
+      {
+        "item_id": "ed5f787f-1515-4036-b9f5-0795a9b7cea0",
+        "description": "The Counter class is defined with the required attributes and methods.",
+        "max_points": 10.0,
+        "is_critical": true,
+        "validation_pattern": "class\\s+Counter:\\s*def\\s+__init__\\(self\\):"
+      },
+      {
+        "item_id": "f5ea75a5-4c3f-4b42-aa94-9fb8bdfc4297",
+        "description": "The 'increment' method correctly increments the counter using a mutex lock.",
+        "max_points": 20.0,
+        "is_critical": true,
+        "validation_pattern": "def\\s+increment\\(self\\):\\s*with\\s+self\\.mutex:"
+      },
+      {
+        "item_id": "f887e7c6-19db-4b57-b9d5-a7b443712ebc",
+        "description": "The 'get_value' method correctly returns the counter value using a mutex lock.",
+        "max_points": 20.0,
+        "is_critical": true,
+        "validation_pattern": "def\\s+get_value\\(self\\):\\s*with\\s+self\\.mutex:"
+      },
+      {
+        "item_id": "a4cce76c-56ad-4b07-b1cd-36264230640b",
+        "description": "The mutex lock is used correctly to ensure thread safety.",
+        "max_points": 30.0,
+        "is_critical": true,
+        "validation_pattern": "self\\.mutex\\s*=\\s*threading\\.Lock\\(\\)"
+      },
+      {
+        "item_id": "8df15810-06dd-455c-b9f9-4b09926985fa",
+        "description": "The code is well-structured, readable, and follows standard Python conventions.",
+        "max_points": 20.0,
+        "is_critical": false,
+        "validation_pattern": null
+      }
+    ]
+  },
+  "student_answer": {
+    "answer_id": "98b9360a-69a7-413c-bf18-1cb0882d8c9e",
+    "answer_text": "Here's how you can implement a thread-safe Counter class in Python using a mutex lock from the `threading` module:\n\n```python\nimport threading\n\nclass Counter:\n    \"\"\"\n    A class that uses a mutex lock to safely increment a shared counter variable across multiple threads.\n    \"\"\"\n\n    def __init__(self):\n        \"\"\"\n        Initialize the counter class with a mutex lock and a shared counter variable set to 0.\n        \"\"\"\n        self._counter = 0\n        self._lock = threading.Lock()\n\n    def increment(self):\n        \"\"\"\n        Increment the shared counter variable.\n        \n        This method is thread-safe due to the use of the mutex lock to prevent concurrent access.\n        \"\"\"\n        with self._lock:\n            self._counter += 1\n\n    def get_value(self):\n        \"\"\"\n        Get the current value of the shared counter variable.\n        \n        This method is thread-safe due to the use of the mutex lock to prevent concurrent access.\n        Returns:\n            int: The current value of the shared counter.\n        \"\"\"\n        with self._lock:\n            return self._counter\n\n# Example usage:\nif __name__ == \"__main__\":\n    counter = Counter()\n\n    def increment_counter(counter_obj):\n        for _ in range(10**5):\n            counter_obj.increment()\n\n    # Create 10 threads that increment the counter 100,000 times each\n    threads = [threading.Thread(target=increment_counter, args=(counter,)) for _ in range(10)]\n    for thread in threads:\n        thread.start()\n\n    # Wait for all threads to finish\n    for thread in threads:\n        thread.join()\n\n    # The final value of the counter should be approximately 10^8\n    print(counter.get_value())\n```\n\nIn this code:\n\n*   The `Counter` class has an `__init__` method that initializes a shared counter variable (`self._counter`) and a mutex lock (`self._lock`).\n*   The `increment` method is thread-safe because it acquires the mutex lock before incrementing the counter. This ensures that only one thread can access the counter at a time.\n*   The `get_value` method is also thread-safe due to the mutex lock.\n*   In the example usage, we create 10 threads that increment the counter 100,000 times each. After all threads finish, we print the final value of the counter, which should be approximately 10^8.",
+    "is_context_isolated": true
+  },
+  "graded_responses": [
+    {
+      "judge_id": "judge-groq-llama",
+      "raw_llm_score": 100.0,
+      "final_score": 0.0,
+      "truth_gate_triggered": true,
+      "feedback_summary": "The student's answer accurately implements a thread-safe Counter class using a mutex lock, meeting all requirements and following standard Python conventions.",
+      "deductions": [
+        {
+          "rubric_item_id": "ed5f787f-1515-4036-b9f5-0795a9b7cea0",
+          "points_deducted": 10.0,
+          "justification": "Truth Gate: critical pattern for 'The Counter class is defined with the required attributes and methods.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "f5ea75a5-4c3f-4b42-aa94-9fb8bdfc4297",
+          "points_deducted": 20.0,
+          "justification": "Truth Gate: critical pattern for 'The 'increment' method correctly increments the counter using a mutex lock.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "f887e7c6-19db-4b57-b9d5-a7b443712ebc",
+          "points_deducted": 20.0,
+          "justification": "Truth Gate: critical pattern for 'The 'get_value' method correctly returns the counter value using a mutex lock.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "a4cce76c-56ad-4b07-b1cd-36264230640b",
+          "points_deducted": 30.0,
+          "justification": "Truth Gate: critical pattern for 'The mutex lock is used correctly to ensure thread safety.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        }
+      ]
+    },
+    {
+      "judge_id": "judge-gemini-flash",
+      "raw_llm_score": 100.0,
+      "final_score": 0.0,
+      "truth_gate_triggered": true,
+      "feedback_summary": "Judge LLM response could not be parsed.",
+      "deductions": [
+        {
+          "rubric_item_id": "ed5f787f-1515-4036-b9f5-0795a9b7cea0",
+          "points_deducted": 10.0,
+          "justification": "Truth Gate: critical pattern for 'The Counter class is defined with the required attributes and methods.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "f5ea75a5-4c3f-4b42-aa94-9fb8bdfc4297",
+          "points_deducted": 20.0,
+          "justification": "Truth Gate: critical pattern for 'The 'increment' method correctly increments the counter using a mutex lock.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "f887e7c6-19db-4b57-b9d5-a7b443712ebc",
+          "points_deducted": 20.0,
+          "justification": "Truth Gate: critical pattern for 'The 'get_value' method correctly returns the counter value using a mutex lock.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        },
+        {
+          "rubric_item_id": "a4cce76c-56ad-4b07-b1cd-36264230640b",
+          "points_deducted": 30.0,
+          "justification": "Truth Gate: critical pattern for 'The mutex lock is used correctly to ensure thread safety.' was not found in the student's answer via static scan.",
+          "is_truth_gate_override": true
+        }
+      ]
+    }
+  ],
+  "ensemble_result": {
+    "consensus_score": 0.0,
+    "score_std_dev": 0.0,
+    "outlier_judge_ids": []
+  }
+}

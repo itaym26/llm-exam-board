@@ -1,0 +1,67 @@
+```
+{
+  "question": "Write a multithreaded program in Python that uses mutex locks to protect access to a shared resource. The program should have two threads: one that increments the resource 100,000 times and another that decrements the resource 100,000 times. After both threads finish, the final value of the resource should be printed. If the mutex lock is implemented correctly, the final value should be 0.",
+  "golden_reference": "
+import threading
+
+class Counter:
+    def __init__(self):
+        self.value = 0
+        self._lock = threading.Lock()
+
+    def increment(self):
+        with self._lock:
+            self.value += 1
+
+    def decrement(self):
+        with self._lock:
+            self.value -= 1
+
+def increment_counter(counter):
+    for _ in range(100000):
+        counter.increment()
+
+def decrement_counter(counter):
+    for _ in range(100000):
+        counter.decrement()
+
+counter = Counter()
+thread1 = threading.Thread(target=increment_counter, args=(counter,))
+thread2 = threading.Thread(target=decrement_counter, args=(counter,))
+
+thread1.start()
+thread2.start()
+
+thread1.join()
+thread2.join()
+
+print(counter.value)
+",
+  "rubric": [
+    {
+      "description": "Correct use of mutex lock to protect access to the shared resource",
+      "max_points": 30,
+      "is_critical": true,
+      "validation_pattern": "threading\\.Lock\\(\\)"
+    },
+    {
+      "description": "Thread creation and management (start, join, etc.)",
+      "max_points": 20,
+      "is_critical": true,
+      "validation_pattern": "threading\\.Thread\\(target=\\w+, args=\\(\\w+\\)\\)"
+    },
+    {
+      "description": "Correct implementation of increment and decrement operations",
+      "max_points": 20,
+      "is_critical": true,
+      "validation_pattern": "self\\.value \\+=\\s*-?1"
+    },
+    {
+      "description": "Code organization, readability, and formatting",
+      "max_points": 30,
+      "is_critical": false,
+      "validation_pattern": ""
+    }
+  ]
+}
+```

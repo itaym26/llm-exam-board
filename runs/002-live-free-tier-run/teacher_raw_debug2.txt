@@ -1,0 +1,88 @@
+```
+{
+  "question": "Write a multithreaded program in Python that uses mutex locks to protect access to a shared resource. The program should create two threads, each of which increments a shared counter 10000 times. Use a mutex lock to ensure that the counter is accessed safely by both threads.",
+  "golden_reference": "
+import threading
+
+class Counter:
+    def __init__(self):
+        self.count = 0
+        self.lock = threading.Lock()
+
+    def increment(self):
+        with self.lock:
+            self.count += 1
+
+def worker(counter):
+    for _ in range(10000):
+        counter.increment()
+
+def main():
+    counter = Counter()
+    threads = []
+
+    for _ in range(2):
+        thread = threading.Thread(target=worker, args=(counter,))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+    print(f'Expected: 20000, Actual: {counter.count}')
+
+if __name__ == '__main__':
+    main()
+",
+  "rubric": [
+    {
+      "description": "The program creates two threads",
+      "max_points": 10,
+      "is_critical": true,
+      "validation_pattern": "threading\\.Thread\\(target=worker, args=\\(counter,\\)\\)"
+    },
+    {
+      "description": "The program uses a mutex lock to protect access to the shared counter",
+      "max_points": 20,
+      "is_critical": true,
+      "validation_pattern": "self\\.lock = threading\\.Lock\\(\\)"
+    },
+    {
+      "description": "The program increments the shared counter 10000 times in each thread",
+      "max_points": 15,
+      "is_critical": true,
+      "validation_pattern": "for _ in range\\(10000\\):"
+    },
+    {
+      "description": "The program correctly joins the threads before printing the final counter value",
+      "max_points": 10,
+      "is_critical": true,
+      "validation_pattern": "thread\\.join\\(\\)"
+    },
+    {
+      "description": "The program prints the final counter value",
+      "max_points": 5,
+      "is_critical": false,
+      "validation_pattern": ""
+    },
+    {
+      "description": "The code is well-structured and readable",
+      "max_points": 10,
+      "is_critical": false,
+      "validation_pattern": ""
+    },
+    {
+      "description": "The code handles potential exceptions",
+      "max_points": 5,
+      "is_critical": false,
+      "validation_pattern": ""
+    },
+    {
+      "description": "The code is efficient and scalable",
+      "max_points": 5,
+      "is_critical": false,
+      "validation_pattern": ""
+    }
+  ]
+}
+```
