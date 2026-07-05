@@ -1,0 +1,3 @@
+```json
+{
+  "question": "You are tasked with writing a Python program that simulates multiple threads updating a shared counter. Implement a class `SafeCounter` that manages an integer counter

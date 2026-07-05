@@ -1,0 +1,10 @@
+[groq-llama-3.3-70b #1] consensus=0.0 truth_gate_triggered=[True, True]
+[groq-llama-3.3-70b #2] consensus=0.0 truth_gate_triggered=[True, True]
+[groq-llama-3.3-70b #3] consensus=0.0 truth_gate_triggered=[True, True]
+[groq-llama-3.3-70b #4] ERROR: unbalanced parenthesis at position 27
+[groq-llama-3.3-70b #5] consensus=0.0 truth_gate_triggered=[True, True]
+[gemini-2.5-flash #1] ERROR: QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'.
+[gemini-2.5-flash #2] ERROR: QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'.
+[gemini-2.5-flash #3] ERROR: QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'.
+[gemini-2.5-flash #4] ERROR: QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'.
+[gemini-2.5-flash #5] ERROR: QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'.

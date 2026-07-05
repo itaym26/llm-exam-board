@@ -1,0 +1,653 @@
+{
+  "summary": {
+    "total": 10,
+    "successful": 4,
+    "errors": 6,
+    "truth_gate_trigger_count": 8,
+    "average_consensus_score": 0.0
+  },
+  "results": [
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "54f00cce-498e-4202-aed2-146d2b41adb2",
+        "prompt": "Create a class that uses a thread pool to execute multiple tasks concurrently. The class should have a method to submit tasks and a method to wait for all tasks to complete. The tasks should be executed in separate threads and should not block each other.",
+        "golden_reference": "class ThreadPool:\n    def __init__(self, num_threads):\n        self.num_threads = num_threads\n        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=num_threads)\n    def submit_task(self, task):\n        return self.pool.submit(task)\n    def wait_for_completion(self):\n        self.pool.shutdown(wait=True)",
+        "rubric": [
+          {
+            "item_id": "40cfecfa-c283-4398-9777-5973ce5a1daa",
+            "description": "The class has an initializer that takes the number of threads as an argument",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def __init__\\(self, \\w+\\):"
+          },
+          {
+            "item_id": "8901e200-0583-414c-9c64-4651328d077c",
+            "description": "The initializer creates a ThreadPoolExecutor with the specified number of threads",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "concurrent\\.futures\\.ThreadPoolExecutor\\(max_workers=\\w+\\)"
+          },
+          {
+            "item_id": "5697006d-df7c-441c-af6d-f97864c007bb",
+            "description": "The class has a method to submit tasks to the thread pool",
+            "max_points": 15.0,
+            "is_critical": true,
+            "validation_pattern": "def submit_task\\(self, \\w+\\):"
+          },
+          {
+            "item_id": "92c3d361-722c-4701-b595-f8c13e8d130c",
+            "description": "The submit task method uses the ThreadPoolExecutor's submit method",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.\\w+\\.submit\\(\\w+\\)"
+          },
+          {
+            "item_id": "88b00054-1b16-4aeb-96a4-e18466fb5d59",
+            "description": "The class has a method to wait for all tasks to complete",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def wait_for_completion\\(self\\):"
+          },
+          {
+            "item_id": "1664331c-0f0a-4e6b-91d4-2ed67ea9de23",
+            "description": "The wait for completion method uses the ThreadPoolExecutor's shutdown method with wait=True",
+            "max_points": 25.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.\\w+\\.shutdown\\(wait=True\\)"
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "d3d1c549-3d0a-491a-b0ca-163845680361",
+        "answer_text": "**ThreadPoolExecutor Class**\n================================\n\n```python\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\nimport threading\n\nclass ThreadPoolExecutorWrapper:\n    \"\"\"\n    A wrapper class that uses a thread pool to execute multiple tasks concurrently.\n    \n    Attributes:\n    max_workers (int): The maximum number of threads in the pool.\n    \"\"\"\n\n    def __init__(self, max_workers=None):\n        \"\"\"\n        Initializes the ThreadPoolExecutorWrapper with the specified maximum number of workers.\n        \n        Args:\n        max_workers (int, optional): The maximum number of threads in the pool. Defaults to None, which means the maximum number of worker threads will be equal to the number of available system CPUs plus one.\n        \"\"\"\n        self.executor = ThreadPoolExecutor(max_workers=max_workers)\n\n    def submit_task(self, func, *args, **kwargs):\n        \"\"\"\n        Submits a task to the thread pool for execution.\n        \n        Args:\n        func (function): The function to be executed.\n        *args: Any positional arguments to be passed to the function.\n        **kwargs: Any keyword arguments to be passed to the function.\n        \n        Returns:\n        A Future representing the task.\n        \"\"\"\n        return self.executor.submit(func, *args, **kwargs)\n\n    def wait_for_tasks(self):\n        \"\"\"\n        Waits for all tasks in the thread pool to complete.\n        \"\"\"\n        self.executor.shutdown(wait=True)\n\n    def is_shutdown(self):\n        return self.executor._shutdown\n\n# Example usage\nif __name__ == \"__main__\":\n    max_workers = 4\n    wrapper = ThreadPoolExecutorWrapper(max_workers=max_workers)\n\n    # Submit tasks to the thread pool\n    task1 = wrapper.submit_task(lambda: print(\"Task 1\"))\n    task2 = wrapper.submit_task(lambda: print(\"Task 2\"))\n    task3 = wrapper.submit_task(lambda: print(\"Task 3\"))\n\n    # Wait for all tasks to complete\n    wrapper.wait_for_tasks()\n\n    # Validate that all tasks have completed\n    print(wrapper.is_shutdown())\n```\n\nIn this code:\n\n1.  We define a `ThreadPoolExecutorWrapper` class that utilizes the `ThreadPoolExecutor` class from the `concurrent.futures` module.\n2.  The `__init__` method initializes the thread pool with a specified maximum number of workers, defaulting to the number of available system CPUs plus one.\n3.  The `submit_task` method submits a task to the thread pool for execution, returning a `Future` representing the task.\n4.  The `wait_for_tasks` method waits for all tasks in the thread pool to complete and shuts down the executor.\n5.  The `is_shutdown` method checks if the executor has been shut down."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 100.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The submission meets all requirements and handles edge cases well, such as providing a default value for max_workers. The code structure, documentation, and usage example are clear and professional.",
+          "deductions": [
+            {
+              "rubric_item_id": "40cfecfa-c283-4398-9777-5973ce5a1daa",
+              "points_deducted": 0.0,
+              "justification": "The class initializer does take the number of threads as an argument, named 'max_workers'.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "8901e200-0583-414c-9c64-4651328d077c",
+              "points_deducted": 0.0,
+              "justification": "The initializer does create a ThreadPoolExecutor with the specified number of threads, but it handles the case where max_workers is not provided.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "5697006d-df7c-441c-af6d-f97864c007bb",
+              "points_deducted": 0.0,
+              "justification": "The class does have a method, submit_task, to submit tasks to the thread pool.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "92c3d361-722c-4701-b595-f8c13e8d130c",
+              "points_deducted": 0.0,
+              "justification": "The submit_task method does use the ThreadPoolExecutor's submit method.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "88b00054-1b16-4aeb-96a4-e18466fb5d59",
+              "points_deducted": 0.0,
+              "justification": "The class does have a method, wait_for_tasks, to wait for all tasks to complete.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "1664331c-0f0a-4e6b-91d4-2ed67ea9de23",
+              "points_deducted": 0.0,
+              "justification": "The wait_for_tasks method does use the ThreadPoolExecutor's shutdown method with wait=True.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "40cfecfa-c283-4398-9777-5973ce5a1daa",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer that takes the number of threads as an argument' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "8901e200-0583-414c-9c64-4651328d077c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The initializer creates a ThreadPoolExecutor with the specified number of threads' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "5697006d-df7c-441c-af6d-f97864c007bb",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to submit tasks to the thread pool' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "92c3d361-722c-4701-b595-f8c13e8d130c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The submit task method uses the ThreadPoolExecutor's submit method' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "88b00054-1b16-4aeb-96a4-e18466fb5d59",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to wait for all tasks to complete' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 100.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "Judge LLM response could not be parsed.",
+          "deductions": [
+            {
+              "rubric_item_id": "40cfecfa-c283-4398-9777-5973ce5a1daa",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer that takes the number of threads as an argument' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "8901e200-0583-414c-9c64-4651328d077c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The initializer creates a ThreadPoolExecutor with the specified number of threads' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "5697006d-df7c-441c-af6d-f97864c007bb",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to submit tasks to the thread pool' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "92c3d361-722c-4701-b595-f8c13e8d130c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The submit task method uses the ThreadPoolExecutor's submit method' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "88b00054-1b16-4aeb-96a4-e18466fb5d59",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to wait for all tasks to complete' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "36115e16-4df5-457b-a8ed-e135ebbde9c0",
+        "prompt": "Create a Python class that uses a thread pool to concurrently execute a given task function with different arguments. The task function should be simulated by a method that sleeps for 1 second and then prints the argument passed to it. The class should have a method to execute the task function with a list of arguments and another method to shut down the thread pool. Implement proper synchronization to ensure thread safety.",
+        "golden_reference": "class ThreadPoolExecutor:\\n    def __init__(self):\\n        self.executor = concurrent.futures.ThreadPoolExecutor()\\n        self.lock = threading.Lock()\\n    def execute_task(self, task_func, args):\\n        with self.lock:\\n            futures = [self.executor.submit(task_func, arg) for arg in args]\\n        for future in concurrent.futures.as_completed(futures):\\n            future.result()\\n    def shutdown(self):\\n        with self.lock:\\n            self.executor.shutdown()\\n\\nclass Task:\\n    def __init__(self):\\n        pass\\n    def task_func(self, arg):\\n        time.sleep(1)\\n        print(arg)\\n\\ntask = Task()\\nexecutor = ThreadPoolExecutor()\\nexecutor.execute_task(task.task_func, [1, 2, 3, 4, 5])\\nexecutor.shutdown()",
+        "rubric": [
+          {
+            "item_id": "4111a8fa-b3f5-445d-b5cb-c60ea0f3322c",
+            "description": "The class has an initializer method that creates a thread pool executor",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def __init__\\(\\):\\s*self\\.\\w+\\s*=\\s*concurrent\\.futures\\.ThreadPoolExecutor\\(\\)"
+          },
+          {
+            "item_id": "3cefc665-f7b4-446e-984c-5e9358bb6e3c",
+            "description": "The class has a method to execute a task function with a list of arguments",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "def execute_task\\(\\):\\s*with\\s+self\\.\\w+:\\s*futures\\s*=\\s*\\[self\\.\\w+\\.submit\\(\\)"
+          },
+          {
+            "item_id": "62c6fce7-a7af-4fe4-822d-0c6214a19df0",
+            "description": "The class has a method to shut down the thread pool",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def shutdown\\(\\):\\s*with\\s+self\\.\\w+:\\s*self\\.\\w+\\.shutdown\\(\\)"
+          },
+          {
+            "item_id": "acc0226f-6836-47ef-9b6f-6515d02b0294",
+            "description": "The class uses a lock to synchronize access to the thread pool",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.\\w+\\s*=\\s*threading\\.Lock\\(\\)"
+          },
+          {
+            "item_id": "3fc36234-7b98-4fc5-9d8b-d5c0663861c6",
+            "description": "The task function is simulated by a method that sleeps for 1 second and then prints the argument passed to it",
+            "max_points": 10.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          },
+          {
+            "item_id": "11e00519-89fd-413d-af49-4a6fb4da012a",
+            "description": "The execute_task method submits the task function to the thread pool for each argument and waits for the results",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "futures\\s*=\\s*\\[self\\.\\w+\\.submit\\(\\)"
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "201ca550-29fb-4cad-85b1-56e0e5030a51",
+        "answer_text": "```python\nimport concurrent.futures\nimport time\nimport threading\n\nclass ThreadPoolExecutor:\n    def __init__(self, max_workers=5):\n        self.max_workers = max_workers\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)\n        self.lock = threading.Lock()\n\n    def task(self, arg):\n        time.sleep(1)\n        print(f\"Task executed with argument: {arg}\")\n\n    def _execute_task(self, arg):\n        with self.lock:\n            self.executor.submit(self.task, arg)\n\n    def execute_task(self, args):\n        results = []\n        with self.lock:\n            futures = [self.executor.submit(self._execute_task, arg) for arg in args]\n            for future in concurrent.futures.as_completed(futures):\n                try:\n                    future.result()\n                except Exception as e:\n                    print(f\"Error executing task: {e}\")\n\n    def shutdown(self):\n        self.executor.shutdown(wait=True)\n\n\n# Example usage:\n\nif __name__ == \"__main__\":\n    executor = ThreadPoolExecutor(max_workers=5)\n\n    args = [i for i in range(10)]\n    executor.execute_task(args)\n\n    time.sleep(5)\n\n    executor.shutdown()\n\n    print(\"Thread pool shut down\")\n```\n\nIn this code, the `ThreadPoolExecutor` class initializes a thread pool with a specified number of workers. The `task` method simulates the task function by sleeping for 1 second and then printing the argument passed to it. The `_execute_task` method wraps the task function execution in the thread pool, ensuring thread safety by acquiring the lock.\n\nThe `execute_task` method takes a list of arguments and executes the task function concurrently for each argument. It uses the thread pool to schedule tasks and handles any exceptions that may occur.\n\nThe `shutdown` method shuts down the thread pool, waiting for all currently executing tasks to complete. This is done to ensure that all tasks are properly finished before exiting the program."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 40.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The provided implementation does not meet the requirements of the execute_task method and has unnecessary complexity. It is recommended to simplify the implementation and directly submit the task function to the thread pool.",
+          "deductions": [
+            {
+              "rubric_item_id": "3cefc665-f7b4-446e-984c-5e9358bb6e3c",
+              "points_deducted": 20.0,
+              "justification": "The execute_task method does not directly submit the task function to the thread pool for each argument. Instead, it submits a wrapper method (_execute_task) that acquires a lock and then submits the task function. This approach is unnecessary and may introduce additional overhead.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "11e00519-89fd-413d-af49-4a6fb4da012a",
+              "points_deducted": 20.0,
+              "justification": "The execute_task method does not directly wait for the results of the task function. Instead, it waits for the results of the _execute_task method, which may not provide the same guarantees.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "4111a8fa-b3f5-445d-b5cb-c60ea0f3322c",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer method that creates a thread pool executor' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "3cefc665-f7b4-446e-984c-5e9358bb6e3c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to execute a task function with a list of arguments' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "62c6fce7-a7af-4fe4-822d-0c6214a19df0",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to shut down the thread pool' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "11e00519-89fd-413d-af49-4a6fb4da012a",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The execute_task method submits the task function to the thread pool for each argument and waits for the results' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 80.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "Judge LLM response could not be parsed.",
+          "deductions": [
+            {
+              "rubric_item_id": "4111a8fa-b3f5-445d-b5cb-c60ea0f3322c",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer method that creates a thread pool executor' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "3cefc665-f7b4-446e-984c-5e9358bb6e3c",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to execute a task function with a list of arguments' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "62c6fce7-a7af-4fe4-822d-0c6214a19df0",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to shut down the thread pool' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "11e00519-89fd-413d-af49-4a6fb4da012a",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The execute_task method submits the task function to the thread pool for each argument and waits for the results' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "95e0c7ee-4576-411d-8b53-c848fa6c0480",
+        "prompt": "Design a multithreaded bank account class that avoids deadlocks when transferring funds between accounts. The class should have methods to deposit, withdraw, and transfer funds. Ensure that the transfer method is thread-safe and does not deadlock when two threads attempt to transfer funds in opposite directions between the same two accounts.",
+        "golden_reference": "class BankAccount:\n    def __init__(self, balance=0):\n        self.balance = balance\n        self.lock = threading.Lock()\n\n    def deposit(self, amount):\n        with self.lock:\n            self.balance += amount\n\n    def withdraw(self, amount):\n        with self.lock:\n            if self.balance >= amount:\n                self.balance -= amount\n                return True\n            return False\n\n    def transfer(self, amount, other_account):\n        first_lock, second_lock = sorted([self.lock, other_account.lock], key=lambda x: id(x))\n        with first_lock:\n            with second_lock:\n                if self.balance >= amount:\n                    self.balance -= amount\n                    other_account.balance += amount\n                    return True\n        return False",
+        "rubric": [
+          {
+            "item_id": "1f7a2ab8-44a6-450e-80f9-31c4a4bcc64c",
+            "description": "The class has a lock attribute to synchronize access to the account balance",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "\\w+\\s*=\\s*threading\\.Lock\\(\\)"
+          },
+          {
+            "item_id": "323341ff-00c0-432e-92c5-b2b2d5541290",
+            "description": "The deposit and withdraw methods acquire the lock to modify the balance",
+            "max_points": 15.0,
+            "is_critical": true,
+            "validation_pattern": "with\\s+self\\.\\w+:"
+          },
+          {
+            "item_id": "3ef5a140-48de-436f-9450-687a15597578",
+            "description": "The transfer method avoids deadlocks by acquiring locks in a consistent order",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "first_lock,\\s*second_lock\\s*=\\s*sorted\\(\\[self\\.\\w+,\\s*other_account\\.\\w+\\]\\,\\s*key=\\s*lambda\\s*x:\\s*id\\(x\\)\\)"
+          },
+          {
+            "item_id": "881769c1-2aa4-4afc-9f67-8391157bd140",
+            "description": "The transfer method checks for sufficient balance before modifying the accounts",
+            "max_points": 10.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          },
+          {
+            "item_id": "fc6803fc-53a0-4d9e-ae52-0e330b2a9f20",
+            "description": "The class handles cases where the transfer amount exceeds the account balance",
+            "max_points": 10.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          },
+          {
+            "item_id": "69a6052e-61ca-4da7-8d0c-7120cd8a44d9",
+            "description": "The class provides a way to handle errors or exceptions during transfer",
+            "max_points": 5.0,
+            "is_critical": false,
+            "validation_pattern": ""
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "e53038db-b421-4e24-bd82-2d376b4e08c5",
+        "answer_text": "**Thread-Safe Bank Account Class**\n=====================================\n\nBelow is an implementation of a multithreaded bank account class in Python, designed to avoid deadlocks when transferring funds between accounts.\n\n```python\nimport threading\n\nclass BankAccount:\n    def __init__(self, account_number, balance=0):\n        \"\"\"\n        Initialize a bank account object.\n\n        Args:\n            account_number (str): Unique account identifier.\n            balance (float, optional): Initial account balance. Defaults to 0.\n        \"\"\"\n        self.account_number = account_number\n        self.balance = balance\n        self.lock = threading.Lock()\n\n    def deposit(self, amount):\n        \"\"\"\n        Deposit funds into the account.\n\n        Args:\n            amount (float): Amount to deposit.\n\n        Raises:\n            ValueError: If the deposit amount is invalid.\n        \"\"\"\n        if not isinstance(amount, (int, float)) or amount < 0:\n            raise ValueError(\"Invalid deposit amount\")\n        with self.lock:\n            self.balance += amount\n\n    def withdraw(self, amount):\n        \"\"\"\n        Withdraw funds from the account.\n\n        Args:\n            amount (float): Amount to withdraw.\n\n        Raises:\n            ValueError: If the withdrawal amount is invalid or the account balance is insufficient.\n        \"\"\"\n        if not isinstance(amount, (int, float)) or amount < 0:\n            raise ValueError(\"Invalid withdrawal amount\")\n        if amount > self.balance:\n            raise ValueError(\"Insufficient balance for withdrawal\")\n        with self.lock:\n            self.balance -= amount\n\n    def lock_for_transfer(self):\n        \"\"\"\n        Acquire a lock for safe transfer of funds.\n\n        Returns:\n            bool: Whether the lock was successfully acquired.\n        \"\"\"\n        return self.lock.acquire(blocking=True, timeout=0)  # acquire lock immediately\n\n    def unlock_after_transfer(self):\n        \"\"\"\n        Release the transfer lock.\n        \"\"\"\n        self.lock.release()\n\n    def transfer(self, recipient, amount):\n        \"\"\"\n        Transfer funds to another account.\n\n        Args:\n            recipient (BankAccount): Recipient account.\n            amount (float): Amount to transfer.\n\n        Raises:\n            ValueError: If the transfer amount is invalid or the account balance is insufficient.\n        \"\"\"\n        if not isinstance(amount, (int, float)) or amount < 0:\n            raise ValueError(\"Invalid transfer amount\")\n        if amount > self.balance:\n            raise ValueError(\"Insufficient balance for transfer\")\n        if amount > recipient.balance:  # prevent overflow\n            raise ValueError(\"Recipient account balance is insufficient for transfer\")\n\n        # acquire locks in a consistent order (self then recipient) to prevent deadlocks\n        if not self.lock.acquire(blocking=True, timeout=0):\n            raise TimeoutError(\"Failed to acquire lock for transfer\")\n        try:\n            recipient.lock.acquire(blocking=True, timeout=0)\n            try:\n                self.balance -= amount\n                recipient.balance += amount\n            finally:\n                recipient.lock.release()\n        finally:\n            self.lock.release()\n\n    def get_balance(self):\n        \"\"\"\n        Get the current account balance.\n\n        Returns:\n            float: Account balance.\n        \"\"\"\n        with self.lock:\n            return self.balance\n```\n\n**Example Usage**\n-----------------\n\n```python\n# create bank accounts\naccount1 = BankAccount(\"12345\")\naccount2 = BankAccount(\"67890\")\n\n# transfer funds from account1 to account2\naccount1(lock_for_transfer())\ntry:\n    account1.transfer(account2, 100)\nexcept ValueError as e:\n    print(f\"Error: {e}\")\nelse:\n    print(\"Transfer successful\")\nfinally:\n    account1.unlock_after_transfer()\n\n# check account balances\nprint(account1.get_balance())  # 0\nprint(account2.get_balance())  # 100\n```\n\nThis implementation ensures thread safety and avoids deadlocks by:\n\n1.  Using a `threading.Lock` object to synchronize access to account balance updates.\n2.  Acquiring the lock in a consistent order (self account then recipient account) to prevent deadlocks.\n3.  Using a `with` statement to automatically release the lock after a transfer operation.\n4.  Preventing recursive locks by releasing the lock for the self account before acquiring the lock for the recipient account.\n\nThis design allows for safe and concurrent transfer of funds between accounts in a multithreaded environment."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 55.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The submission mostly follows the requirements but has some issues with lock acquisition order in the transfer method and limited error handling, and also includes some unused methods.",
+          "deductions": [
+            {
+              "rubric_item_id": "3ef5a140-48de-436f-9450-687a15597578",
+              "points_deducted": 10.0,
+              "justification": "The transfer method does not acquire locks in a consistent order using the 'sorted' function or similar approach as in the reference solution, instead it uses a try-finally block which does not guarantee the order of lock acquisition.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "69a6052e-61ca-4da7-8d0c-7120cd8a44d9",
+              "points_deducted": 5.0,
+              "justification": "The class does provide some error handling, but it does not fully handle all possible exceptions or errors during transfer, and it has unused 'lock_for_transfer' and 'unlock_after_transfer' methods which suggest that the initial implementation had a different error handling approach.",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "3ef5a140-48de-436f-9450-687a15597578",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The transfer method avoids deadlocks by acquiring locks in a consistent order' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 70.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "Judge LLM response could not be parsed.",
+          "deductions": [
+            {
+              "rubric_item_id": "3ef5a140-48de-436f-9450-687a15597578",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The transfer method avoids deadlocks by acquiring locks in a consistent order' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "question_index": 3,
+      "error": "unbalanced parenthesis at position 27"
+    },
+    {
+      "teacher": "groq-llama-3.3-70b",
+      "test_case": {
+        "test_case_id": "fb3a339a-a07a-457a-8330-6e652cc3d291",
+        "prompt": "Create a class that manages a thread pool of worker threads. The class should have a method to add tasks to the pool, which should be executed concurrently by the worker threads. The class should also have a method to shut down the pool and wait for all tasks to be completed.",
+        "golden_reference": "class ThreadPool:\n    def __init__(self, num_workers):\n        self.num_workers = num_workers\n        self.workers = []\n        self.task_queue = queue.Queue()\n        self.shutdown_event = threading.Event()\n        for _ in range(num_workers):\n            worker = threading.Thread(target=self.worker)\n            worker.start()\n            self.workers.append(worker)\n    def add_task(self, task):\n        self.task_queue.put(task)\n    def shutdown(self):\n        self.shutdown_event.set()\n        for worker in self.workers:\n            worker.join()\n    def worker(self):\n        while not self.shutdown_event.is_set():\n            try:\n                task = self.task_queue.get(timeout=1)\n                task()\n            except queue.Empty:\n                pass\n",
+        "rubric": [
+          {
+            "item_id": "d69a51e8-6916-4dbe-9ab6-2b823a89ad0c",
+            "description": "The class has an initializer that sets up the thread pool with a specified number of workers.",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def __init__\\(self, \\w+\\):"
+          },
+          {
+            "item_id": "dc403b43-c7b3-4deb-8f5b-4810ec8ed6f2",
+            "description": "The class has a method to add tasks to the pool.",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "def add_task\\(self, \\w+\\):"
+          },
+          {
+            "item_id": "807c751a-c28b-4b34-80c7-a448b44d9412",
+            "description": "The class has a method to shut down the pool and wait for all tasks to be completed.",
+            "max_points": 15.0,
+            "is_critical": true,
+            "validation_pattern": "def shutdown\\(self\\):"
+          },
+          {
+            "item_id": "fce8ca63-68c1-4466-8aa4-0e5354400878",
+            "description": "The initializer creates and starts the specified number of worker threads.",
+            "max_points": 15.0,
+            "is_critical": true,
+            "validation_pattern": "for \\w+ in range\\(\\w+\\):\\s*\\w+ = threading\\.Thread\\(target=\\w+\\)\\s*\\w+\\.start\\(\\)"
+          },
+          {
+            "item_id": "611389a5-9fbe-4f63-851a-64dd405d1fda",
+            "description": "The worker threads execute tasks concurrently from the task queue.",
+            "max_points": 20.0,
+            "is_critical": true,
+            "validation_pattern": "while \\w+\\.is_set\\(\\) == False:\\s*try:\\s*\\w+ = \\w+\\.get\\(timeout=\\d+\\)\\s*\\w+\\(\\)"
+          },
+          {
+            "item_id": "adcec460-d2b1-4b01-9a98-3d8fa8b5bdb5",
+            "description": "The shutdown method sets an event to signal the worker threads to exit and waits for them to finish.",
+            "max_points": 10.0,
+            "is_critical": true,
+            "validation_pattern": "self\\.\\w+\\.set\\(\\)\\s*for \\w+ in \\w+:\\s*\\w+\\.join\\(\\)"
+          }
+        ]
+      },
+      "student_answer": {
+        "answer_id": "a2465986-ad66-4f8c-9f3f-0d3c4044e38b",
+        "answer_text": "**Thread Pool Manager**\n======================\n\nBelow is an example implementation of a thread pool manager in Python. This class uses the `concurrent.futures` library to manage a pool of worker threads.\n\n```python\nimport concurrent.futures\nimport time\nfrom typing import Callable, List\n\nclass ThreadPoolManager:\n    \"\"\"\n    A class that manages a thread pool of worker threads.\n    \n    Attributes:\n    ----------\n    num_workers : int\n        The number of worker threads in the pool.\n    executor : concurrent.futures.Executor\n        The executor that manages the worker threads.\n    \"\"\"\n\n    def __init__(self, num_workers: int):\n        \"\"\"\n        Initializes a new instance of the ThreadPoolManager class.\n\n        Args:\n        ----\n        num_workers : int\n            The number of worker threads in the pool.\n        \"\"\"\n        self.num_workers = num_workers\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=num_workers)\n\n    def add_task(self, task: Callable, *args, **kwargs) -> None:\n        \"\"\"\n        Adds a task to the pool, which will be executed concurrently by a worker thread.\n\n        Args:\n        ----\n        task : callable\n            The task to be executed.\n        *args : variable arguments\n            Arguments to be passed to the task.\n        **kwargs : variable keyword arguments\n            Keyword arguments to be passed to the task.\n        \"\"\"\n        self.executor.submit(task, *args, **kwargs)\n\n    def shut_down(self) -> None:\n        \"\"\"\n        Shuts down the pool and waits for all tasks to be completed.\n        \"\"\"\n        self.executor.shutdown(wait=True)\n\n\n# Example usage:\n\ndef worker(name: str) -> None:\n    print(f\"Worker {name} started\")\n    time.sleep(2)  # Simulate some work\n    print(f\"Worker {name} finished\")\n\ndef main() -> None:\n    num_workers = 3\n    task_names = ['A', 'B', 'C', 'D', 'E']\n\n    thread_pool_manager = ThreadPoolManager(num_workers)\n\n    for name in task_names:\n        thread_pool_manager.add_task(worker, name)\n\n    thread_pool_manager.shut_down()\n\nif __name__ == \"__main__\":\n    main()\n```\n\nIn this code:\n\n*   The `ThreadPoolManager` class manages a pool of worker threads using `concurrent.futures.ThreadPoolExecutor`.\n*   The `add_task` method allows adding a task to the pool, which will be executed by a worker thread.\n*   The `shut_down` method shuts down the pool and waits for all tasks to be completed.\n\nThe example usage at the end demonstrates how to create a thread pool manager, add tasks to it, and shut it down, all while showing the concurrent execution of tasks."
+      },
+      "graded_responses": [
+        {
+          "judge_id": "judge-groq-llama",
+          "raw_llm_score": 80.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "The student's code is a correct and effective implementation of a thread pool manager. The code uses the concurrent.futures library to manage a pool of worker threads, allowing tasks to be executed concurrently. All the required methods are implemented as specified. The only potential improvement would be to manually handle the thread creation and task execution for better understanding of thread pool management.",
+          "deductions": [
+            {
+              "rubric_item_id": "fce8ca63-68c1-4466-8aa4-0e5354400878",
+              "points_deducted": 0.0,
+              "justification": "The initializer creates and starts the specified number of worker threads, although it uses ThreadPoolExecutor which abstracts away the thread creation",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "611389a5-9fbe-4f63-851a-64dd405d1fda",
+              "points_deducted": 0.0,
+              "justification": "The worker threads execute tasks concurrently from the task queue, although it uses ThreadPoolExecutor which abstracts away the task queue",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "d69a51e8-6916-4dbe-9ab6-2b823a89ad0c",
+              "points_deducted": 0.0,
+              "justification": "The class has an initializer that sets up the thread pool with a specified number of workers",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "dc403b43-c7b3-4deb-8f5b-4810ec8ed6f2",
+              "points_deducted": 0.0,
+              "justification": "The class has a method to add tasks to the pool",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "807c751a-c28b-4b34-80c7-a448b44d9412",
+              "points_deducted": 0.0,
+              "justification": "The class has a method to shut down the pool and wait for all tasks to be completed",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "adcec460-d2b1-4b01-9a98-3d8fa8b5bdb5",
+              "points_deducted": 0.0,
+              "justification": "The shutdown method sets an event to signal the worker threads to exit and waits for them to finish, although it uses ThreadPoolExecutor which abstracts away the shutdown event",
+              "is_truth_gate_override": false
+            },
+            {
+              "rubric_item_id": "d69a51e8-6916-4dbe-9ab6-2b823a89ad0c",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer that sets up the thread pool with a specified number of workers.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "dc403b43-c7b3-4deb-8f5b-4810ec8ed6f2",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to add tasks to the pool.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "807c751a-c28b-4b34-80c7-a448b44d9412",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to shut down the pool and wait for all tasks to be completed.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "fce8ca63-68c1-4466-8aa4-0e5354400878",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The initializer creates and starts the specified number of worker threads.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "611389a5-9fbe-4f63-851a-64dd405d1fda",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The worker threads execute tasks concurrently from the task queue.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "adcec460-d2b1-4b01-9a98-3d8fa8b5bdb5",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The shutdown method sets an event to signal the worker threads to exit and waits for them to finish.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        },
+        {
+          "judge_id": "judge-gemini-flash",
+          "raw_llm_score": 80.0,
+          "final_score": 0.0,
+          "truth_gate_triggered": true,
+          "feedback_summary": "Judge LLM response could not be parsed.",
+          "deductions": [
+            {
+              "rubric_item_id": "d69a51e8-6916-4dbe-9ab6-2b823a89ad0c",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has an initializer that sets up the thread pool with a specified number of workers.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "dc403b43-c7b3-4deb-8f5b-4810ec8ed6f2",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to add tasks to the pool.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "807c751a-c28b-4b34-80c7-a448b44d9412",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The class has a method to shut down the pool and wait for all tasks to be completed.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "fce8ca63-68c1-4466-8aa4-0e5354400878",
+              "points_deducted": 15.0,
+              "justification": "Truth Gate: critical pattern for 'The initializer creates and starts the specified number of worker threads.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "611389a5-9fbe-4f63-851a-64dd405d1fda",
+              "points_deducted": 20.0,
+              "justification": "Truth Gate: critical pattern for 'The worker threads execute tasks concurrently from the task queue.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            },
+            {
+              "rubric_item_id": "adcec460-d2b1-4b01-9a98-3d8fa8b5bdb5",
+              "points_deducted": 10.0,
+              "justification": "Truth Gate: critical pattern for 'The shutdown method sets an event to signal the worker threads to exit and waits for them to finish.' was not found in the student's answer via static scan.",
+              "is_truth_gate_override": true
+            }
+          ]
+        }
+      ],
+      "ensemble_result": {
+        "consensus_score": 0.0,
+        "score_std_dev": 0.0,
+        "outlier_judge_ids": []
+      }
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 0,
+      "error": "QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'."
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 1,
+      "error": "QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'."
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 2,
+      "error": "QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'."
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 3,
+      "error": "QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'."
+    },
+    {
+      "teacher": "gemini-2.5-flash",
+      "question_index": 4,
+      "error": "QuestionGenerator: Teacher LLM returned unparsable output for topic 'Multithreading'."
+    }
+  ]
+}
