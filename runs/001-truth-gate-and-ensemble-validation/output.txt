@@ -1,0 +1,27 @@
+
+--- Scenario 1: student omits the mutex lock ---
+Consensus score: 0.0
+Score std dev:   0.000
+Outlier judges:  none
+  judge=judge-gpt      raw_llm_score=15.0  final_score=0.0   truth_gate_triggered=True
+    - (10.0 pts) Truth Gate: critical pattern for 'Acquires a mutex lock before touching the shared counter' was not found in the student's answer via static scan.
+  judge=judge-claude   raw_llm_score=15.0  final_score=0.0   truth_gate_triggered=True
+    - (10.0 pts) Truth Gate: critical pattern for 'Acquires a mutex lock before touching the shared counter' was not found in the student's answer via static scan.
+
+--- Scenario 2: student includes the mutex lock ---
+Consensus score: 15.0
+Score std dev:   0.000
+Outlier judges:  none
+  judge=judge-gpt      raw_llm_score=15.0  final_score=15.0  truth_gate_triggered=False
+  judge=judge-claude   raw_llm_score=15.0  final_score=15.0  truth_gate_triggered=False
+
+--- Scenario 3: one judge is a statistical outlier ---
+Consensus score: 15.0
+Score std dev:   6.600
+Outlier judges:  ['judge-erratic']
+  judge=judge-gpt      raw_llm_score=15.0  final_score=15.0  truth_gate_triggered=False
+  judge=judge-claude   raw_llm_score=15.0  final_score=15.0  truth_gate_triggered=False
+  judge=judge-erratic  raw_llm_score=1.0   final_score=1.0   truth_gate_triggered=False
+    - (14.0 pts) minor style nit
+
+All demo scenarios completed and passed their assertions.
