@@ -1,0 +1,54 @@
+<svg viewBox="0 0 1200 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="220" fill="url(#bg2)" rx="10"/>
+
+  <line x1="120" y1="70" x2="1080" y2="70" stroke="#334155" stroke-width="3"/>
+
+  <g font-family="Trebuchet MS, Verdana, sans-serif">
+
+    <!-- Run 001 -->
+    <g transform="translate(150,70)">
+      <circle r="26" fill="#134e4a" stroke="#2dd4bf" stroke-width="3"/>
+      <text y="6" text-anchor="middle" font-size="18" font-weight="700" fill="#5eead4">1</text>
+      <text y="46" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e8f0">Mock Sanity Check</text>
+      <text y="68" text-anchor="middle" font-size="12.5" fill="#5eead4">✓ 11/11 expectations met</text>
+      <text y="86" text-anchor="middle" font-size="12.5" fill="#94a3b8">proved the ensemble fix</text>
+      <text y="104" text-anchor="middle" font-size="12.5" fill="#94a3b8">before spending real $</text>
+    </g>
+
+    <!-- Run 002 -->
+    <g transform="translate(430,70)">
+      <circle r="26" fill="#1e3a5f" stroke="#60a5fa" stroke-width="3"/>
+      <text y="6" text-anchor="middle" font-size="18" font-weight="700" fill="#93c5fd">2</text>
+      <text y="46" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e8f0">First Live Run</text>
+      <text y="68" text-anchor="middle" font-size="12.5" fill="#fbbf24">⚠ found: false Truth Gate trigger</text>
+      <text y="86" text-anchor="middle" font-size="12.5" fill="#94a3b8">correct code, zeroed for</text>
+      <text y="104" text-anchor="middle" font-size="12.5" fill="#94a3b8">using "self._lock" not "mutex"</text>
+    </g>
+
+    <!-- Run 003 -->
+    <g transform="translate(750,70)">
+      <circle r="26" fill="#4a2b12" stroke="#fb923c" stroke-width="3"/>
+      <text y="6" text-anchor="middle" font-size="18" font-weight="700" fill="#fdba74">3</text>
+      <text y="46" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e8f0">10-Question Batch</text>
+      <text y="68" text-anchor="middle" font-size="12.5" fill="#fb923c">⚠ found: 4 real bugs</text>
+      <text y="86" text-anchor="middle" font-size="12.5" fill="#94a3b8">regex crash, weak Audit Gate,</text>
+      <text y="104" text-anchor="middle" font-size="12.5" fill="#94a3b8">"." vs newline, thinking tokens</text>
+    </g>
+
+    <!-- Run 004 -->
+    <g transform="translate(1050,70)">
+      <circle r="26" fill="#14432a" stroke="#4ade80" stroke-width="3"/>
+      <text y="6" text-anchor="middle" font-size="18" font-weight="700" fill="#86efac">4</text>
+      <text y="46" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e8f0">Verified Fix</text>
+      <text y="68" text-anchor="middle" font-size="12.5" fill="#4ade80">✓ 0 crashes, first real score</text>
+      <text y="86" text-anchor="middle" font-size="12.5" fill="#94a3b8">Truth Gate rate 100% → 75%</text>
+      <text y="104" text-anchor="middle" font-size="12.5" fill="#94a3b8">stopped by Gemini's daily quota</text>
+    </g>
+  </g>
+</svg>

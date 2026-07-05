@@ -1,44 +1,70 @@
-# llm-exam-board
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="llm-exam-board — a Teacher · Student · Judge pipeline that distrusts its own judge" width="100%"/>
+</p>
 
-A production-oriented **Teacher-Student-Judge** pipeline for evaluating LLMs with other LLMs — built around one core problem: an LLM judge will confidently praise broken code if you let it. This pipeline doesn't let it.
+<p align="center">
+  <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white">
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-f59e0b">
+  <img alt="Core dependencies" src="https://img.shields.io/badge/core%20deps-stdlib%20only-2dd4bf">
+  <img alt="Live runs tracked" src="https://img.shields.io/badge/live%20runs-4%20tracked-a78bfa">
+  <img alt="Architecture" src="https://img.shields.io/badge/architecture-V14-60a5fa">
+</p>
 
-It follows the **V14 architecture** (see [`docs/SYSTEM_PROMPT_V14.md`](docs/SYSTEM_PROMPT_V14.md) for the full specification this repository implements).
+<p align="center">
+  <em>An LLM judge will confidently praise broken code if you let it.<br/>This pipeline doesn't let it.</em>
+</p>
+
+---
+
+### Contents
+
+[Why this exists](#why-this-exists) · [Architecture](#architecture) · [Project structure](#project-structure) · [Installation](#installation) · [Quick start](#quick-start) · [Running the demo](#running-the-demo) · [Live runs](#live-runs-what-actually-happened-when-this-hit-real-models) · [License](#license)
 
 ## Why this exists
 
-Enterprise-grade eval tooling assumes you have unlimited budget and a small army of human graders. This project assumes you have neither — just a handful of standard LLM APIs — and engineers around their two biggest failure modes: **hallucinated grading** (a judge that says "great job!" to code with an obvious bug) and **brittle parsing** (a pipeline that crashes because an LLM wrapped its JSON in a sentence).
+Enterprise-grade eval tooling assumes you have unlimited budget and a small army of human graders. This project assumes you have neither — just a handful of standard LLM APIs — and engineers around their two biggest failure modes:
+
+> 🎭 **Hallucinated grading** — a judge that says *"great job!"* to code with an obvious bug
+> 🧩 **Brittle parsing** — a pipeline that crashes because an LLM wrapped its JSON in a sentence
+
+It follows the **V14 architecture** (see [`docs/SYSTEM_PROMPT_V14.md`](docs/SYSTEM_PROMPT_V14.md) for the full specification this repository implements).
 
 ## Architecture
 
-```
- Teacher (QuestionGenerator)
-      |  generates TestCase: prompt + golden_reference + dynamic rubric
-      v
- Audit Gate (EvaluationOrchestrator)
-      |  rejects the task if it isn't actually solvable
-      v
- Student (StudentResponder)
-      |  answers under Context Isolation (zero prior memory)
-      v
- Judge(s) (JudgeEngine)  x N
-      |  itemized deductions (LLM) + Truth Gate (static check)
-      v
- Ensemble (EnsembleManager)
-      |  consensus score, outlier judges isolated
-      v
- EnsembleResult
+```mermaid
+flowchart LR
+    T(["🎓 Teacher<br/>QuestionGenerator"]) -->|"TestCase"| A{"🚪 Audit Gate"}
+    A -- "rejected · retry ≤3×" --> T
+    A -- "solvable" --> S(["🧑‍🎓 Student<br/>StudentResponder"])
+    S -->|"StudentAnswer"| J1["⚖️ Judge A"]
+    S -->|"StudentAnswer"| J2["⚖️ Judge B"]
+    J1 --> E{{"🧮 Ensemble<br/>Consensus"}}
+    J2 --> E
+    E --> R(["📊 EnsembleResult<br/>consensus + outliers"])
+
+    classDef teacher fill:#134e4a,stroke:#2dd4bf,color:#e2e8f0
+    classDef gate fill:#4a3b12,stroke:#fbbf24,color:#e2e8f0
+    classDef student fill:#1e3a5f,stroke:#60a5fa,color:#e2e8f0
+    classDef judge fill:#4a1a35,stroke:#f472b6,color:#e2e8f0
+    classDef ensemble fill:#2e1a4a,stroke:#a78bfa,color:#e2e8f0
+
+    class T teacher
+    class A gate
+    class S student
+    class J1,J2 judge
+    class E,R ensemble
 ```
 
 ### Defense mechanisms
 
-| Mechanism | Component | Purpose |
-|---|---|---|
-| **Truth Gate** | `JudgeEngine` | Statically scans the student's answer for critical logic (e.g., a mutex lock). If it's missing, the score is zeroed out — the LLM's own praise is overridden, not just discounted. |
-| **Micro-Resilience** | `ResilienceUtils` | Recovers a JSON object from noisy LLM text (markdown fences, trailing prose, trailing commas) without ever raising, so one malformed response can't crash a batch run. |
-| **Ensemble Consensus** | `EnsembleManager` | Aggregates every judge's score for one answer using a median/MAD-based (Median Absolute Deviation) modified Z-score, so a single erratic judge is isolated as an outlier instead of dragging down the majority's agreement. |
-| **Audit Gate** | `EvaluationOrchestrator` | Rejects a generated task outright if it has no golden reference or no rubric, before it ever reaches the Student. |
-| **Context Isolation** | `StudentResponder` | Every answer is generated from a brand-new, self-contained prompt — no conversational memory leaks between tasks. |
-| **Itemized Deductions** | `interfaces.DeductionItem` | Judges must justify every lost point against a specific rubric item; free-text feedback is informational only, never authoritative. |
+| | Mechanism | Component | Purpose |
+|---|---|---|---|
+| 🛡️ | **Truth Gate** | `JudgeEngine` | Statically scans the student's answer for critical logic (e.g., a mutex lock). If it's missing, the score is zeroed out — the LLM's own praise is overridden, not just discounted. |
+| 🧩 | **Micro-Resilience** | `ResilienceUtils` | Recovers a JSON object from noisy LLM text (markdown fences, trailing prose, trailing commas) without ever raising, so one malformed response can't crash a batch run. |
+| ⚖️ | **Ensemble Consensus** | `EnsembleManager` | Aggregates every judge's score for one answer using a median/MAD-based (Median Absolute Deviation) modified Z-score, so a single erratic judge is isolated as an outlier instead of dragging down the majority's agreement. |
+| 🚪 | **Audit Gate** | `EvaluationOrchestrator` | Rejects a generated task — and retries generation — if its own golden reference wouldn't pass its own critical rubric checks, before it ever reaches the Student. |
+| 🔒 | **Context Isolation** | `StudentResponder` | Every answer is generated from a brand-new, self-contained prompt — no conversational memory leaks between tasks. |
+| 📝 | **Itemized Deductions** | `interfaces.DeductionItem` | Judges must justify every lost point against a specific rubric item; free-text feedback is informational only, never authoritative. |
 
 ## Project structure
 
@@ -47,7 +73,8 @@ llm-exam-board/
 ├── README.md
 ├── pyproject.toml
 ├── docs/
-│   └── SYSTEM_PROMPT_V14.md      # the architecture spec this repo implements
+│   ├── SYSTEM_PROMPT_V14.md      # the architecture spec this repo implements
+│   └── assets/                   # diagrams used in this README
 ├── examples/
 │   ├── run_demo.py               # offline, mock-LLM walkthrough of the full pipeline
 │   ├── run_real_demo.py          # single live run against the Anthropic API
@@ -124,6 +151,10 @@ python examples/run_demo.py
 
 Every live run (real API calls, not mocks) is tracked under [`runs/`](runs/), each in its own dated folder following the same discipline: **write down what we expect *before* running** (`EXPECTATIONS.md`), **capture the real output** (`output.json`), **log any problem as it happens** with its cause, fix, and how we proceeded (`ISSUES.md`), and **compare expected vs. actual afterward** (`ANALYSIS.md`). Nothing here is cherry-picked after the fact.
 
+<p align="center">
+  <img src="docs/assets/runs-timeline.svg" alt="Timeline of runs 001-004: mock sanity check, first live run finds a false trigger, a 10-question batch finds 4 real bugs, then a verified fix" width="100%"/>
+</p>
+
 | Run | What it tested | Headline result |
 |---|---|---|
 | [001](runs/001-truth-gate-and-ensemble-validation/) | Mock LLMs, full pipeline sanity check | 11/11 expectations met — established the median/MAD ensemble fix works before any real API cost |
@@ -151,7 +182,7 @@ For a "multithreaded banking system with two threads transferring funds" task, b
 }
 ```
 
-(The other judge, `judge-groq-llama`, independently scored the same answer 40.0 for the same underlying reason — the ensemble's `consensus_score` of 55.0 is their mean, since neither was flagged as an outlier.)
+*(The other judge, `judge-groq-llama`, independently scored the same answer 40.0 for the same underlying reason — the ensemble's `consensus_score` of 55.0 is their mean, since neither was flagged as an outlier.)*
 
 A different question in the same run shows the Truth Gate doing its job — a judge that had praised the code (`raw_llm_score: 80.0`) got overridden to 0 because three required thread-safety patterns were never found:
 
@@ -173,12 +204,12 @@ A different question in the same run shows the Truth Gate doing its job — a ju
 
 ### Key insights that came out of real runs (not visible from mocks alone)
 
-- **An LLM-authored regex will occasionally be outright invalid.** `JudgeEngine.check_pattern` now catches `re.error` instead of letting a single bad pattern crash grading for an entire answer.
-- **Python's `.` does not match `\n` by default.** Almost every multi-line `validation_pattern` the Teacher wrote (checking "is X called somewhere in this method body") silently failed to match *even correct code* until `check_pattern` was fixed to use `re.DOTALL`. This was the single highest-impact fix found across all four runs.
-- **The Audit Gate's "solvable" check was too weak.** It only checked for non-empty fields — never that the Teacher's own golden reference actually satisfies its own critical patterns. It now does, and retries generation up to 3 times if a rubric fails its own self-consistency check, since an LLM Teacher won't hit that bar every time.
-- **Hardcoding a specific variable, attribute, or method name in a validation pattern is a real, recurring false-positive source.** A student naming their lock `self._lock` instead of the Teacher's `self.mutex` is exactly as correct — the Teacher prompt now explicitly forbids this and requires wildcards instead, unless the exact name is spelled out in the question itself.
-- **Gemini 2.5 Flash's "thinking" tokens count against `max_output_tokens`.** A moderately complex prompt spent ~980 of a 1024-token budget on invisible reasoning, truncating the actual JSON answer to a few dozen tokens — indistinguishable from a formatting bug unless you inspect `usage_metadata.thoughts_token_count` directly. Fixed by disabling thinking and raising the budget.
-- **Gemini's free tier caps at 20 `generate_content` calls per day per model, per project** — not just a per-minute limit, and shared across *every* use of that model that day (testing, debugging, and actual runs all count against the same 20). Budget for this explicitly when planning a run that uses Gemini in any role.
+- 🐛 **An LLM-authored regex will occasionally be outright invalid.** `JudgeEngine.check_pattern` now catches `re.error` instead of letting a single bad pattern crash grading for an entire answer.
+- 🔍 **Python's `.` does not match `\n` by default.** Almost every multi-line `validation_pattern` the Teacher wrote (checking "is X called somewhere in this method body") silently failed to match *even correct code* until `check_pattern` was fixed to use `re.DOTALL`. This was the single highest-impact fix found across all four runs.
+- 🚪 **The Audit Gate's "solvable" check was too weak.** It only checked for non-empty fields — never that the Teacher's own golden reference actually satisfies its own critical patterns. It now does, and retries generation up to 3 times if a rubric fails its own self-consistency check, since an LLM Teacher won't hit that bar every time.
+- 🏷️ **Hardcoding a specific variable, attribute, or method name in a validation pattern is a real, recurring false-positive source.** A student naming their lock `self._lock` instead of the Teacher's `self.mutex` is exactly as correct — the Teacher prompt now explicitly forbids this and requires wildcards instead, unless the exact name is spelled out in the question itself.
+- 💭 **Gemini 2.5 Flash's "thinking" tokens count against `max_output_tokens`.** A moderately complex prompt spent ~980 of a 1024-token budget on invisible reasoning, truncating the actual JSON answer to a few dozen tokens — indistinguishable from a formatting bug unless you inspect `usage_metadata.thoughts_token_count` directly. Fixed by disabling thinking and raising the budget.
+- ⏳ **Gemini's free tier caps at 20 `generate_content` calls per day per model, per project** — not just a per-minute limit, and shared across *every* use of that model that day (testing, debugging, and actual runs all count against the same 20). Budget for this explicitly when planning a run that uses Gemini in any role.
 
 ## License
 
