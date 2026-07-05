@@ -9,7 +9,7 @@ from the student's answer.
 """
 
 import re
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .interfaces import DeductionItem, GradedResponse, RubricItem, StudentAnswer, TestCase
 from .resilience import ResilienceUtils
@@ -211,6 +211,39 @@ class JudgeEngine:
         total_deducted = sum(deduction.points_deducted for deduction in deductions)
         return max(0.0, total_possible - total_deducted)
 
+    @staticmethod
+    def check_pattern(pattern: str, text: str) -> Optional[bool]:
+        """Safely checks whether a regex pattern matches within a text, without ever raising.
+
+        `validation_pattern` values are authored by an LLM (the Teacher),
+        not a human, so they cannot be trusted to always be syntactically
+        valid regular expressions. This method is the single place that
+        risk is contained, so neither the Truth Gate nor the Audit Gate
+        (which reuses this same check against the golden reference) can be
+        crashed by a malformed pattern.
+
+        Args:
+            pattern: The regex pattern to search for.
+            text: The text to search within.
+
+        Returns:
+            Optional[bool]: True if the pattern matches somewhere in the
+            text, False if the pattern is valid but does not match, or
+            None if `pattern` is not itself a valid regular expression --
+            in which case the check is inconclusive rather than a
+            confirmed absence of the underlying logic.
+        """
+        try:
+            # re.DOTALL is essential here: these patterns check for a
+            # construct's presence anywhere in a multi-line code snippet,
+            # and a Teacher-authored pattern spanning a line break (e.g.
+            # matching a method signature followed by part of its body)
+            # would otherwise silently fail to match even a fully correct
+            # answer, since "." does not match "\n" by default.
+            return re.search(pattern, text, re.DOTALL) is not None
+        except re.error:
+            return None
+
     def __apply_truth_gate(
         self, rubric: List[RubricItem], answer_text: str
     ) -> Tuple[List[DeductionItem], bool]:
@@ -219,7 +252,7 @@ class JudgeEngine:
         This is the Truth Gate: it operates entirely independently of the
         LLM's own assessment, using deterministic regex matching against the
         raw answer text. Any critical rubric item whose validation_pattern
-        is not found triggers an override.
+        is confirmed absent (not merely unverifiable) triggers an override.
 
         Args:
             rubric: The full list of rubric items for this test case.
@@ -236,10 +269,13 @@ class JudgeEngine:
         for item in rubric:
             if not item.is_critical or not item.validation_pattern:
                 continue
-            # A missing critical pattern means the required logic was not
-            # statically found in the answer, regardless of any LLM claim
-            # to the contrary.
-            if not re.search(item.validation_pattern, answer_text):
+            match_result = self.check_pattern(item.validation_pattern, answer_text)
+            # match_result is False only when the pattern is valid and
+            # confirmed absent -- a real missing-logic finding. When it is
+            # None, the pattern itself is malformed and the check is
+            # inconclusive, so the student must not be penalized for a
+            # rubric-authoring defect that isn't theirs.
+            if match_result is False:
                 override_deductions.append(
                     DeductionItem(
                         rubric_item_id_init=item.item_id,

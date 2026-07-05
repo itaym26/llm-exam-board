@@ -52,6 +52,16 @@ def run_audit_gate(test_case) -> None:
         raise RuntimeError(f"Audit Gate rejected TestCase {test_case.test_case_id}: empty golden_reference.")
     if not test_case.rubric:
         raise RuntimeError(f"Audit Gate rejected TestCase {test_case.test_case_id}: empty rubric.")
+    for item in test_case.rubric:
+        if not item.is_critical or not item.validation_pattern:
+            continue
+        match_result = JudgeEngine.check_pattern(item.validation_pattern, test_case.golden_reference)
+        if match_result is not True:
+            reason = "is not a valid regular expression" if match_result is None else "does not match the golden reference"
+            raise RuntimeError(
+                f"Audit Gate rejected TestCase {test_case.test_case_id}: critical rubric item "
+                f"'{item.description}' has a validation_pattern that {reason}."
+            )
     test_case.mark_audited()
 
 

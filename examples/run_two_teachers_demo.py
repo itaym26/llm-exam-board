@@ -80,7 +80,56 @@ def run_audit_gate(test_case: TestCase) -> None:
         raise RuntimeError(f"Audit Gate rejected TestCase {test_case.test_case_id}: empty golden_reference.")
     if not test_case.rubric:
         raise RuntimeError(f"Audit Gate rejected TestCase {test_case.test_case_id}: empty rubric.")
+    for item in test_case.rubric:
+        if not item.is_critical or not item.validation_pattern:
+            continue
+        match_result = JudgeEngine.check_pattern(item.validation_pattern, test_case.golden_reference)
+        if match_result is not True:
+            reason = "is not a valid regular expression" if match_result is None else "does not match the golden reference"
+            raise RuntimeError(
+                f"Audit Gate rejected TestCase {test_case.test_case_id}: critical rubric item "
+                f"'{item.description}' has a validation_pattern that {reason}."
+            )
     test_case.mark_audited()
+
+
+MAX_AUDIT_GATE_ATTEMPTS = 3
+
+
+def generate_audited_test_case(teacher: QuestionGenerator, topic: str, difficulty: str) -> TestCase:
+    """Generates a TestCase, retrying on generation/Audit Gate failure up to a bounded limit.
+
+    An LLM-authored rubric occasionally fails the Audit Gate's own
+    self-consistency check (e.g. a validation_pattern that doesn't quite
+    match the Teacher's own golden_reference), or the Teacher's raw output
+    occasionally fails to parse at all -- both are treated as "this
+    attempt didn't produce a usable TestCase," worth a fresh attempt,
+    rather than a fatal error on the first occurrence.
+
+    Args:
+        teacher: The QuestionGenerator to request a TestCase from.
+        topic: The high-level topic to generate a task for.
+        difficulty: A difficulty label for the generated task.
+
+    Returns:
+        TestCase: The first generation to pass the Audit Gate.
+
+    Raises:
+        RuntimeError: If MAX_AUDIT_GATE_ATTEMPTS consecutive attempts all fail.
+    """
+    last_error: RuntimeError = None
+    for _ in range(MAX_AUDIT_GATE_ATTEMPTS):
+        try:
+            test_case = teacher.generate_test_case(topic, difficulty)
+            run_audit_gate(test_case)
+            return test_case
+        except RuntimeError as error:
+            last_error = error
+
+    raise RuntimeError(
+        f"{MAX_AUDIT_GATE_ATTEMPTS} consecutive attempts to generate a usable TestCase for "
+        f"topic '{topic}' all failed; last error: {last_error}"
+    ) from last_error
 
 
 def evaluate_test_case(
@@ -178,7 +227,7 @@ def main() -> None:
     for teacher_label, teacher in teachers:
         for question_index in range(QUESTIONS_PER_TEACHER):
             try:
-                test_case = teacher.generate_test_case(TOPIC, DIFFICULTY)
+                test_case = generate_audited_test_case(teacher, TOPIC, DIFFICULTY)
                 record = evaluate_test_case(test_case, teacher_label, student_responder, judges, ensemble_manager)
                 results.append(record)
                 consensus = record["ensemble_result"]["consensus_score"]

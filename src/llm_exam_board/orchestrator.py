@@ -136,6 +136,14 @@ class EvaluationOrchestrator:
         ensemble_manager (EnsembleManager): The consensus/outlier aggregator.
     """
 
+    # An LLM-authored rubric occasionally fails the Audit Gate's own
+    # self-consistency check (e.g. a validation_pattern that doesn't quite
+    # match the Teacher's own golden_reference) by chance, not because
+    # every generation from that Teacher is unusable. Retrying a bounded
+    # number of times is far more useful than failing the whole evaluation
+    # on the first rejected generation.
+    __MAX_AUDIT_GATE_ATTEMPTS = 3
+
     def __init__(
         self,
         question_generator_init: QuestionGenerator,
@@ -194,11 +202,10 @@ class EvaluationOrchestrator:
             EnsembleResult: The ensemble consensus across all configured judges.
 
         Raises:
-            RuntimeError: If the Audit Gate rejects the generated TestCase
-                as unsolvable.
+            RuntimeError: If the Audit Gate rejects every generation attempt
+                (see __MAX_AUDIT_GATE_ATTEMPTS) as unsolvable.
         """
-        test_case = self.__question_generator.generate_test_case(topic, difficulty)
-        self.__run_audit_gate(test_case)
+        test_case = self.__generate_audited_test_case(topic, difficulty)
 
         student_answer = self.__student_responder.answer(test_case)
 
@@ -206,6 +213,36 @@ class EvaluationOrchestrator:
             judge.grade(test_case, student_answer) for judge in self.__judges
         ]
         return self.__ensemble_manager.build_consensus(graded_responses)
+
+    def __generate_audited_test_case(self, topic: str, difficulty: str) -> TestCase:
+        """Generates a TestCase, retrying on Audit Gate rejection up to a bounded limit.
+
+        Args:
+            topic: The high-level topic to generate a task for.
+            difficulty: A difficulty label for the generated task.
+
+        Returns:
+            TestCase: The first generation to pass the Audit Gate.
+
+        Raises:
+            RuntimeError: If __MAX_AUDIT_GATE_ATTEMPTS consecutive
+                generations are all rejected by the Audit Gate.
+        """
+        last_rejection: RuntimeError = None
+        for _ in range(self.__MAX_AUDIT_GATE_ATTEMPTS):
+            test_case = self.__question_generator.generate_test_case(topic, difficulty)
+            try:
+                self.__run_audit_gate(test_case)
+                return test_case
+            except RuntimeError as rejection:
+                # This attempt's TestCase is discarded; the loop simply asks
+                # the Teacher to generate a fresh one on the next iteration.
+                last_rejection = rejection
+
+        raise RuntimeError(
+            f"Audit Gate rejected {self.__MAX_AUDIT_GATE_ATTEMPTS} consecutive TestCase "
+            f"generations for topic '{topic}'; last rejection reason: {last_rejection}"
+        ) from last_rejection
 
     def run_batch_evaluation(
         self, topic: str, difficulty: str, count: int
@@ -231,10 +268,17 @@ class EvaluationOrchestrator:
         """Confirms a generated TestCase is solvable before releasing it to the Student.
 
         A task is considered solvable, for the purposes of this gate, when
-        it carries a non-empty golden reference solution and at least one
-        rubric item to grade against. This is a deterministic structural
-        check rather than a re-invocation of an LLM, keeping the gate fast
-        and reproducible.
+        it carries a non-empty golden reference solution, at least one
+        rubric item to grade against, and -- critically -- when its own
+        golden reference actually satisfies every critical rubric item's
+        validation_pattern. That last check exists because the Teacher
+        authors both the reference solution and the patterns, and a
+        malformed or overly rigid pattern can fail even the Teacher's own
+        correct solution; if that happens, every Student answer would be
+        Truth-Gated regardless of its quality, so the task is rejected
+        before ever reaching the Student. This is a deterministic
+        structural check rather than a re-invocation of an LLM, keeping the
+        gate fast and reproducible.
 
         Args:
             test_case: The TestCase to audit.
@@ -251,4 +295,19 @@ class EvaluationOrchestrator:
             raise RuntimeError(
                 f"Audit Gate rejected TestCase {test_case.test_case_id}: empty rubric."
             )
+        for item in test_case.rubric:
+            if not item.is_critical or not item.validation_pattern:
+                continue
+            match_result = JudgeEngine.check_pattern(item.validation_pattern, test_case.golden_reference)
+            if match_result is not True:
+                reason = (
+                    "is not a valid regular expression"
+                    if match_result is None
+                    else "does not match the Teacher's own golden reference"
+                )
+                raise RuntimeError(
+                    f"Audit Gate rejected TestCase {test_case.test_case_id}: critical rubric "
+                    f"item '{item.description}' has a validation_pattern that {reason}, so even "
+                    "the reference solution would fail the Truth Gate."
+                )
         test_case.mark_audited()
