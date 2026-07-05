@@ -8,7 +8,7 @@ from a brand-new prompt with no memory of previously answered tasks.
 
 from typing import Callable, List
 
-from interfaces import StudentAnswer, TestCase
+from .interfaces import StudentAnswer, TestCase
 
 # A generic LLM client contract: a callable that sends a prompt string and
 # returns the model's raw text response. Kept local to this module so that

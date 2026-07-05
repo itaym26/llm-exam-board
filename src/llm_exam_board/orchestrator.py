@@ -10,10 +10,10 @@ Teacher -> Audit Gate -> Student -> Judge(s) -> Ensemble flow end to end.
 import statistics
 from typing import List
 
-from generators import QuestionGenerator
-from interfaces import EnsembleResult, GradedResponse, TestCase
-from judge_engine import JudgeEngine
-from responders import StudentResponder
+from .generators import QuestionGenerator
+from .interfaces import EnsembleResult, GradedResponse, TestCase
+from .judge_engine import JudgeEngine
+from .responders import StudentResponder
 
 
 class EnsembleManager:

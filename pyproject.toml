@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-exam-board"
+version = "1.0.0"
+description = "A V14 Teacher-Student-Judge LLM evaluation pipeline with a static Truth Gate against judge hallucination."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

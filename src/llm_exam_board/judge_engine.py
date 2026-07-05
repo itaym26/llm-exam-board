@@ -11,8 +11,8 @@ from the student's answer.
 import re
 from typing import Any, Callable, Dict, List, Tuple
 
-from interfaces import DeductionItem, GradedResponse, RubricItem, StudentAnswer, TestCase
-from resilience import ResilienceUtils
+from .interfaces import DeductionItem, GradedResponse, RubricItem, StudentAnswer, TestCase
+from .resilience import ResilienceUtils
 
 # A generic LLM client contract: a callable that sends a prompt string and
 # returns the model's raw text response. Kept local to this module so that

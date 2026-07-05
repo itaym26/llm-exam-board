@@ -10,8 +10,8 @@ and a dynamic, itemized rubric.
 import random
 from typing import Any, Callable, Dict, List, Optional
 
-from interfaces import RubricItem, TestCase
-from resilience import ResilienceUtils
+from .interfaces import RubricItem, TestCase
+from .resilience import ResilienceUtils
 
 # A generic LLM client contract: a callable that sends a prompt string and
 # returns the model's raw text response. Kept local to this module so that
