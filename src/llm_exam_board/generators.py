@@ -209,9 +209,26 @@ class QuestionGenerator:
             '  "question": a self-contained task prompt for a student,\n'
             '  "golden_reference": a correct reference solution to the task,\n'
             '  "rubric": an array of objects, each with keys '
-            '"description", "max_points", "is_critical", and "validation_pattern" '
-            "(a regex pattern used to statically verify critical logic; "
-            "required whenever is_critical is true).\n"
+            '"description", "max_points", "is_critical", and "validation_pattern".\n\n'
+            "Critical rules for validation_pattern (this is a regex matched literally, "
+            "with no understanding of code semantics, against a student's answer):\n"
+            "- NEVER hardcode a specific identifier, variable, or method name the student "
+            "chose (e.g. do not require the literal name \"mutex\" or \"lock\"). A student "
+            "who names their lock `self._lock` instead of `self.mutex` is just as correct, "
+            "and a pattern bound to one specific name will wrongly fail them.\n"
+            "- Instead, match the underlying language feature or API being exercised, "
+            "using wildcards for any identifier the student is free to choose. For "
+            "example, to check that some attribute is guarded by a lock acquired in "
+            "__init__, prefer a pattern like "
+            '"\\w+\\s*=\\s*threading\\.Lock\\(\\)" and "with\\s+self\\.\\w+\\s*:" '
+            "rather than binding to one exact attribute name.\n"
+            "- A pattern is only worth marking is_critical=true if it can be written "
+            "this way; if a requirement cannot be checked without assuming a specific "
+            "name, mark it is_critical=false and describe it in free text instead.\n\n"
+            "Also, if golden_reference or any other string value contains a line break, "
+            "escape it as the two characters backslash-n (\\n) inside the JSON string, "
+            "never as a literal newline, since a literal newline inside a JSON string "
+            "is invalid JSON.\n\n"
             "Return only the JSON object, with no additional commentary."
         )
 
