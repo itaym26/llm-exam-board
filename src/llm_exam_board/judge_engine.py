@@ -83,11 +83,16 @@ class JudgeEngine:
         parsed = ResilienceUtils.clean_json_response(raw_response)
 
         if parsed is None:
-            # An unparsable judge response carries no usable information;
-            # it is treated as a zero-deduction, zero-confidence response
-            # rather than crashing the grading pipeline.
-            llm_deductions: List[DeductionItem] = []
-            feedback_summary = "Judge LLM response could not be parsed."
+            return GradedResponse(
+                test_case_id_init=test_case.test_case_id,
+                answer_id_init=student_answer.answer_id,
+                judge_id_init=self.__judge_id,
+                raw_llm_score_init=None,
+                final_score_init=None,
+                is_valid_init=False,
+                invalid_reason_init="Judge LLM response could not be parsed.",
+                feedback_summary_init="Invalid grading attempt: judge response could not be parsed.",
+            )
         else:
             llm_deductions = self.__parse_deductions(parsed.get("deductions", []))
             feedback_summary = str(parsed.get("feedback_summary", ""))
