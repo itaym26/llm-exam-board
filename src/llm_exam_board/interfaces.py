@@ -385,7 +385,7 @@ class StudentAnswer:
 class GradedResponse:
     """Represents a single Judge's evaluation of one StudentAnswer.
 
-    The `final_score` is always the authoritative score: it is derived from
+    For valid attempts, `final_score` is the authoritative score: it is derived from
     `raw_llm_score` but is subject to being zeroed out or overridden by the
     JudgeEngine's Truth Gate when critical logic is statically found to be
     missing, regardless of what the underlying LLM claimed in its feedback.
@@ -395,8 +395,10 @@ class GradedResponse:
         test_case_id (str): The TestCase.test_case_id being graded.
         answer_id (str): The StudentAnswer.answer_id being graded.
         judge_id (str): Identifier of the judge model/instance that produced this.
-        raw_llm_score (float): The score as originally proposed by the LLM judge.
-        final_score (float): The authoritative score after Truth Gate enforcement.
+        raw_llm_score (Optional[float]): Score proposed by the judge, or None if invalid.
+        final_score (Optional[float]): Authoritative grade, or None if invalid.
+        is_valid (bool): False when a judge attempt produced no usable grade.
+        invalid_reason (str): Explanation for an invalid attempt.
         deductions (List[DeductionItem]): Itemized point deductions.
         truth_gate_triggered (bool): Whether the Truth Gate overrode the LLM score.
         feedback_summary (str): Free-text summary, informational only and never
@@ -406,24 +408,28 @@ class GradedResponse:
     test_case_id_init: InitVar[str]
     answer_id_init: InitVar[str]
     judge_id_init: InitVar[str]
-    raw_llm_score_init: InitVar[float]
-    final_score_init: InitVar[float]
+    raw_llm_score_init: InitVar[Optional[float]]
+    final_score_init: InitVar[Optional[float]]
     deductions_init: InitVar[Optional[List[DeductionItem]]] = None
     truth_gate_triggered_init: InitVar[bool] = False
     feedback_summary_init: InitVar[str] = ""
     response_id_init: InitVar[Optional[str]] = None
+    is_valid_init: InitVar[bool] = True
+    invalid_reason_init: InitVar[str] = ""
 
     def __post_init__(
         self,
         test_case_id_init: str,
         answer_id_init: str,
         judge_id_init: str,
-        raw_llm_score_init: float,
-        final_score_init: float,
+        raw_llm_score_init: Optional[float],
+        final_score_init: Optional[float],
         deductions_init: Optional[List[DeductionItem]],
         truth_gate_triggered_init: bool,
         feedback_summary_init: str,
         response_id_init: Optional[str],
+        is_valid_init: bool,
+        invalid_reason_init: str,
     ) -> None:
         """Validates constructor arguments and populates private attributes.
 
@@ -442,7 +448,14 @@ class GradedResponse:
             ValueError: If either score is negative, or if a Truth Gate override
                 is claimed without any corresponding override deduction present.
         """
-        if raw_llm_score_init < 0 or final_score_init < 0:
+        if not is_valid_init:
+            if raw_llm_score_init is not None or final_score_init is not None:
+                raise ValueError("Invalid grading attempts must not contain a score.")
+            if not invalid_reason_init:
+                raise ValueError("Invalid grading attempts need an invalid_reason.")
+        elif raw_llm_score_init is None or final_score_init is None:
+            raise ValueError("Valid grading attempts must contain scores.")
+        if any(score is not None and score < 0 for score in (raw_llm_score_init, final_score_init)):
             raise ValueError("Scores must not be negative.")
         resolved_deductions = list(deductions_init) if deductions_init else []
         # Guards against silent inconsistency: a Truth Gate override must always
@@ -458,8 +471,10 @@ class GradedResponse:
         self.__test_case_id: str = test_case_id_init
         self.__answer_id: str = answer_id_init
         self.__judge_id: str = judge_id_init
-        self.__raw_llm_score: float = raw_llm_score_init
-        self.__final_score: float = final_score_init
+        self.__is_valid = is_valid_init
+        self.__invalid_reason = invalid_reason_init
+        self.__raw_llm_score: Optional[float] = raw_llm_score_init
+        self.__final_score: Optional[float] = final_score_init
         self.__deductions: List[DeductionItem] = resolved_deductions
         self.__truth_gate_triggered: bool = truth_gate_triggered_init
         self.__feedback_summary: str = feedback_summary_init
@@ -486,14 +501,24 @@ class GradedResponse:
         return self.__judge_id
 
     @property
-    def raw_llm_score(self) -> float:
+    def raw_llm_score(self) -> Optional[float]:
         """float: The score as originally proposed by the LLM judge."""
         return self.__raw_llm_score
 
     @property
-    def final_score(self) -> float:
+    def final_score(self) -> Optional[float]:
         """float: The authoritative score after Truth Gate enforcement."""
         return self.__final_score
+
+    @property
+    def is_valid(self) -> bool:
+        """Whether this attempt produced a usable grade."""
+        return self.__is_valid
+
+    @property
+    def invalid_reason(self) -> str:
+        """Why an attempt has no grade; empty for valid grades."""
+        return self.__invalid_reason
 
     @property
     def deductions(self) -> List[DeductionItem]:
