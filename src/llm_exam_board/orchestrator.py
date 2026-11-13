@@ -72,7 +72,10 @@ class EnsembleManager:
                 "Cannot build consensus from an empty list of graded responses."
             )
 
-        scores = [response.final_score for response in graded_responses]
+        valid_responses = [response for response in graded_responses if response.is_valid]
+        if not valid_responses:
+            raise ValueError("Cannot build consensus: no valid judge grades; retry the invalid attempts.")
+        scores = [response.final_score for response in valid_responses]
         # Population standard deviation is used since these are the entire
         # set of judges consulted for this answer, not a sample of a larger
         # population. A single judge has zero deviation by definition. This
@@ -92,7 +95,7 @@ class EnsembleManager:
 
         outlier_judge_ids: List[str] = []
         inlier_scores: List[float] = []
-        for response, deviation in zip(graded_responses, absolute_deviations):
+        for response, deviation in zip(valid_responses, absolute_deviations):
             if mad > 0:
                 modified_z_score = 0.6745 * deviation / mad
                 is_outlier = modified_z_score > self.__outlier_threshold
